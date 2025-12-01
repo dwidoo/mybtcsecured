@@ -1,24 +1,22 @@
 /**
- * MyBTCSecured ENGINE V2.8
- * Fixes: Variable 'T' definition, Start logic conflict
+ * MyBTCSecured ENGINE V3.0 (Konsensus 2025 Implementation)
+ * - Logic: Hard Filter + Soft Scoring
+ * - Arch: Multisig default for Tier 3
  */
 
 // ============================================================
 // 1. INITIALISATION & DATA
 // ============================================================
 
-// Vérification de sécurité
 if (typeof KB === 'undefined') {
-    console.error("ERREUR CRITIQUE : knowledge_base.js n'est pas chargé. Vérifiez l'ordre des scripts dans index.html");
+    console.error("ERREUR CRITIQUE : knowledge_base.js n'est pas chargé.");
     alert("Erreur de chargement des données. Vérifiez la console.");
 }
 
 const DB_WALLETS = KB.WALLETS;
 const DB_METAL = KB.METALS;
-// CORRECTION ICI : On définit T pour que le reste du code fonctionne
 const T = KB.LANG.fr; 
 
-// Variables d'état
 let answers = { q5: [] };
 let currentStep = 0;
 const QUESTION_FLOW = ['q1', 'q1_bis', 'q2', 'q2_bis', 'q3', 'q3_bis', 'q4', 'q5', 'q6', 'q7', 'q8'];
@@ -26,41 +24,30 @@ const QUESTION_FLOW = ['q1', 'q1_bis', 'q2', 'q2_bis', 'q3', 'q3_bis', 'q4', 'q5
 // ============================================================
 // 2. GESTION DU DISCLAIMER & DEMARRAGE
 // ============================================================
+// ... (Cette section reste identique à la V2.9 fournie précédemment) ...
 
-// Appelé par le bouton HTML "Démarrer"
 function openLegalModal() {
     const modal = document.getElementById('legal-modal');
-    if(modal) {
-        modal.classList.remove('hidden');
-    } else {
-        console.error("Erreur : Modal #legal-modal introuvable dans le HTML");
-        // Fallback si la modale est cassée : on lance le quiz direct
-        startQuiz(); 
-    }
+    if(modal) modal.classList.remove('hidden');
+    else startQuiz(); 
 }
 
-// Appelé par le bouton "Accéder à l'outil" dans la modale
 function acceptLegalAndStart() {
     document.getElementById('legal-modal').classList.add('hidden');
     startQuiz();
 }
 
-// Logique de la case à cocher (activée au chargement de la page)
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. INJECTION DU TITRE ET DU LOGO (NOUVEAU)
-    document.title = T.app_title_text; // Met à jour l'onglet
+    // Injection des textes (Identique V2.9)
+    document.title = T.app_title_text;
     const navBrand = document.getElementById('nav-brand');
-    if(navBrand) navBrand.innerHTML = T.app_brand_html; // Met à jour le logo avec les couleurs
-
-    // 1. INJECTION DES TRADUCTIONS (I18N)
-    // Home
+    if(navBrand) navBrand.innerHTML = T.app_brand_html;
+    
     setText('txt-hero-1', T.hero_title_1);
     setText('txt-hero-2', T.hero_title_2);
-    setHTML('txt-hero-desc', T.hero_desc); // HTML pour le gras <strong>
+    setHTML('txt-hero-desc', T.hero_desc);
     setText('txt-btn-start', T.hero_btn);
     
-    // Blocs Rassurance
     setText('txt-block-1-title', T.block_anon_title);
     setText('txt-block-1-desc', T.block_anon_desc);
     setText('txt-block-2-title', T.block_agnostic_title);
@@ -68,27 +55,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setText('txt-block-3-title', T.block_full_title);
     setText('txt-block-3-desc', T.block_full_desc);
 
-    // Modale Juridique
     setText('legal-title', T.legal_title);
     setHTML('legal-p1', T.legal_p1);
     setHTML('legal-p2', T.legal_p2);
     setHTML('legal-p3', T.legal_p3);
     setHTML('legal-p4', T.legal_p4);
     
-    // Injection des textes des deux checkboxes
     setText('lbl-check-offline', T.legal_checkbox_offline);
     setText('lbl-check-terms', T.legal_checkbox_terms);
-    
     setText('legal-btn-txt', T.legal_btn_start);
 
-// LOGIQUE DE VALIDATION (2 Checkboxes obligatoires)
+    // Logique Checkbox
     const checkOffline = document.getElementById('check-offline');
     const checkTerms = document.getElementById('check-terms');
     const btnLegal = document.getElementById('legal-btn');
 
     function updateStartButton() {
         if(checkOffline && checkTerms && btnLegal) {
-            // Les deux doivent être cochées
             if(checkOffline.checked && checkTerms.checked) {
                 btnLegal.disabled = false;
                 btnLegal.classList.remove('bg-slate-700', 'text-slate-500', 'cursor-not-allowed');
@@ -100,22 +83,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     if(checkOffline) checkOffline.addEventListener('change', updateStartButton);
     if(checkTerms) checkTerms.addEventListener('change', updateStartButton);
 });
 
-// Helper pour injecter du texte simple
-function setText(id, text) {
-    const el = document.getElementById(id);
-    if(el) el.innerText = text;
-}
+function setText(id, text) { const el = document.getElementById(id); if(el) el.innerText = text; }
+function setHTML(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html; }
 
-// Helper pour injecter du HTML (ex: <strong>)
-function setHTML(id, html) {
-    const el = document.getElementById(id);
-    if(el) el.innerHTML = html;
-}
 
 // ============================================================
 // 3. MOTEUR DU QUIZ
@@ -137,15 +111,24 @@ function prevQuestion() {
 
 function shouldSkip(qId) {
     if (qId === 'q1_bis' && answers.q1 !== '3') return true;
-    if (qId === 'q8' && (answers.q1 !== '3' && answers.q2 !== 'expert')) return true;
+    
+    // MODIFICATION 3: On affiche q8 (Dés) pour Expert OU Tier 3 (Vital)
+    // Avant : if (qId === 'q8' && answers.q2 !== 'expert') return true;
+    if (qId === 'q8') {
+        const isExpert = answers.q2 === 'expert';
+        const isVital = answers.q1 === '3';
+        if (!isExpert && !isVital) return true; // On skip seulement si ni expert ni vital
+    }
+    
     return false;
 }
 
 function renderQuestion() {
+    // ... (Code identique à V2.9 pour l'affichage) ...
     const qId = QUESTION_FLOW[currentStep];
     if (!qId) { finishQuiz(); return; }
 
-    const qData = T[qId]; // T est maintenant bien défini !
+    const qData = T[qId];
     const container = document.getElementById('question-container');
     const progress = ((currentStep) / QUESTION_FLOW.length) * 100;
     document.getElementById('progress-bar').style.width = `${progress}%`;
@@ -234,154 +217,229 @@ function finishQuiz() {
 }
 
 // ============================================================
-// 4. MOTEUR DE CALCUL
+// 4. MOTEUR DE CALCUL (VERSION 3.0 - Recommendation Engine)
 // ============================================================
 
 function calculateResults() {
-    const tier = answers.q1;
-    const skill = answers.q2;
+    const tier = answers.q1; // '1', '2', '3'
+    const skill = answers.q2; // 'beginner', 'intermediate', 'expert'
     const handicap = answers.q2_bis === 'handicap';
     const threat = answers.q4;
     const risks = answers.q5 || [];
     const legacy = answers.q6;
     const trust = answers.q8;
     const isNomad = answers.q3_bis === 'nomad';
+    const noKyc = answers.q7 === 'no_kyc';
+    const device = answers.q3;
 
-    // 1. STRATÉGIE
+    // --- A. DÉFINITION DE L'ARCHITECTURE ---
     let archTitle = T.arch_single;
     let archDesc = T.arch_single_desc;
     let warnings = [];
     let isShamir = false;
     let isMultisig = false;
 
-    if (tier === '3' && skill === 'intermediate' && legacy !== 'legal' && legacy !== 'tech_heir') {
-        archTitle = T.arch_shamir;
-        archDesc = T.arch_shamir_desc;
-        warnings.push(T.warn_shamir);
-        isShamir = true;
-    } 
-    else if ((threat === 'decoy' || threat === 'dk') || risks.includes('opt_social')) {
-        archTitle = T.arch_passphrase;
-        archDesc = T.arch_passphrase_desc;
-        warnings.push(T.warn_passphrase);
-    } 
-    else if (tier === '3' && legacy === 'family') {
-        archTitle = T.arch_liana;
-        archDesc = T.arch_liana_desc;
-    } 
+    // MODIFICATION 2: Multisig par défaut pour Tier 3 (sauf Beginner)
+    if (tier === '3') {
+        if (skill === 'expert' || skill === 'intermediate') {
+            archTitle = T.arch_multisig;
+            archDesc = T.arch_multisig_desc + " (Possible en solo : 3 clés en lieux différents).";
+            isMultisig = true;
+        } else if (skill === 'beginner') {
+            // Beginner Tier 3 : On reste en Passphrase mais on éduque
+            archTitle = T.arch_passphrase;
+            archDesc = T.arch_passphrase_desc + " <strong>Conseil : Envisagez le Multisig Assisté (Nunchuk/Casa) pour ce niveau de patrimoine.</strong>";
+        }
+    }
+    // Cas spécifiques qui surchargent (Legacy ou Menace spécifique)
     else if (threat === 'bunker') {
         archTitle = T.arch_multisig;
         archDesc = T.arch_multisig_desc;
         isMultisig = true;
     }
-
-    // 2. MÉTAL
-    let validMetals = [];
-    if (isShamir) {
-        validMetals = DB_METAL.filter(m => m.shamir === true);
-        if (risks.includes('opt_fire_ext') || tier === '3') {
-            validMetals = validMetals.filter(m => m.material.includes('Titane'));
-        }
-    } else {
-        validMetals = DB_METAL.filter(m => m.shamir === false);
-        if (risks.includes('opt_fire_ext')) {
-            validMetals = validMetals.filter(m => m.material.includes('Titane'));
-        } else if (risks.includes('opt_water')) {
-            validMetals = validMetals.filter(m => m.material.includes('316') || m.material.includes('Titane'));
+    else if (tier === '3' && legacy === 'family' && !isMultisig) {
+        // Liana seulement si on est pas déjà parti sur du multisig pur
+        archTitle = T.arch_liana;
+        archDesc = T.arch_liana_desc;
+    }
+    else if ((threat === 'decoy' || threat === 'dk') || risks.includes('opt_social')) {
+        // Leurre (si pas déjà multisig)
+        if(!isMultisig) {
+            archTitle = T.arch_passphrase;
+            archDesc = T.arch_passphrase_desc;
+            warnings.push(T.warn_passphrase);
         }
     }
-    if (validMetals.length === 0) validMetals = [DB_METAL[2]];
-    validMetals.sort((a, b) => a.price - b.price);
 
-    // 3. HARDWARE SCORING
-    let scoredWallets = DB_WALLETS.map(w => {
-        let score = 100;
+    // Gestion Shamir (Si utilisateur intermédiaire tier 3 et pas multisig)
+    if (tier === '3' && skill === 'intermediate' && !isMultisig && legacy !== 'family') {
+        archTitle = T.arch_shamir;
+        archDesc = T.arch_shamir_desc;
+        warnings.push(T.warn_shamir);
+        isShamir = true;
+    }
+
+    // --- B. SELECTION METAL (VERSION FINALE – PARFAITE) ---
+    let validMetals = isShamir 
+        ? DB_METAL.filter(m => m.shamir === true)
+        : DB_METAL.filter(m => m.shamir === false);
+
+    // 1. Feu extrême → titane obligatoire
+    if (risks.includes('opt_fire_ext')) {
+        validMetals = validMetals.filter(m => m.material.includes('Titane'));
+    }
+    // 2. Eau → 316 ou titane
+    else if (risks.includes('opt_water')) {
+        validMetals = validMetals = validMetals.filter(m => m.material.includes('316') || m.material.includes('Titane'));
+    }
+
+    // 3. Tier 3 → on exclut les résistance B (Hodlinox), on garde seulement A et A+
+    if (tier === '3') {
+        validMetals = validMetals.filter(m => m.resistance.startsWith('A'));
+    }
+
+    // Tri final
+    if (tier === '3' && !risks.includes('opt_fire_ext')) {
+        // Tier 3 sans feu extrême → tri par prix (le moins cher en premier parmi les bons)
+        validMetals.sort((a, b) => (a.price || 999) - (b.price || 999));
+    } else {
+        validMetals.sort((a, b) => (a.price || 999) - (b.price || 999));
+    }
+
+    // LIMITE À 5 MAX (plus jamais de liste interminable)
+    validMetals = validMetals.slice(0, 5);
+
+    if (validMetals.length === 0) validMetals = [DB_METAL[0]];
+
+
+    // --- C. FILTRAGE & SCORING WALLETS (MODIFICATION 1) ---
+    
+    // 1. FILTRE DUR (Hard Filter)
+    let filteredWallets = DB_WALLETS.filter(w => {
+        // Handicap : On interdit les petits écrans
+        if (handicap && (w.screen === 'small' || w.screen === 'mid')) return false;
         
-        if (handicap && (w.screen === 'small' || w.screen === 'mid')) score -= 2000;
-        if (answers.q3 === 'ios' && skill === 'beginner' && !w.features.includes('ble') && w.id !== 'keystone3') score -= 2000;
-        if (trust === 'dice' && !w.features.includes('dice')) score -= 500;
-        if (isNomad && !w.features.includes('stealth')) score -= 50;
-        if (answers.q7 === 'no_kyc' && !w.features.includes('opensource')) score -= 200;
-
-        if (skill === 'beginner' && w.skill === 'beginner') score += 50;
-        if (skill === 'expert' && w.skill === 'expert') score += 50;
-        if (isShamir && w.features.includes('shamir')) score += 150;
-        if (tier === '3' && w.features.includes('airgap')) score += 30;
-        if (w.id === 'bitkey') {
-            if (skill === 'beginner' && threat !== 'bunker' && answers.q7 !== 'no_kyc') score += 80;
-            else score -= 500;
+        // iOS Beginner : On interdit ce qui est complexe (Airgap pur sans QR facile) sauf si Bluetooth
+        if (device === 'ios' && skill === 'beginner' && !w.features.includes('ble')) {
+             // Exception pour Keystone/Jade/ColdcardQ1 qui ont des UX QR codes gérables
+             if(!['keystone3','jade','coldcard_q1'].includes(w.id)) return false;
         }
+        
+        // No-KYC : On veut de l'Open Source (Bitkey accepté car hardware 'dummy')
+        if (noKyc && !w.features.includes('opensource') && w.id !== 'bitkey') return false;
+        
+        // Shamir requis
+        if (isShamir && !w.features.includes('shamir')) return false;
+        
+        return true;
+    });
+
+    // 2. SCORING SOUPLE (Soft Scoring)
+    let scoredWallets = filteredWallets.map(w => {
+        let score = 50; // Base score
+
+        // Bonus Compétence
+        if (skill === 'beginner' && w.skill === 'beginner') score += 20;
+        if (skill === 'expert' && w.skill === 'expert') score += 20;
+
+        // Bonus Features
+        if (isMultisig && (w.id === 'coldcard_q1' || w.id === 'seedsigner' || w.id === 'bitbox02')) score += 30; // Les rois du multisig
+        if (isShamir && w.features.includes('shamir')) score += 50;
+        if (tier === '3' && w.features.includes('airgap')) score += 25; // Airgap valorisé pour Tier 3
+        
+        // Bonus Confiance (Dice)
+        if (trust === 'dice' && w.features.includes('dice')) score += 40;
+
+        // Bonus Nomad
+        if (isNomad && w.features.includes('stealth')) score += 15;
+
+        // Malus légers (préférence utilisateur)
+        if (device === 'ios' && !w.features.includes('ble') && !w.features.includes('camera')) score -= 10; // Pas pratique
+        if (noKyc && !w.features.includes('tor') && w.id !== 'seedsigner') score -= 5;
+
         return { ...w, score };
     });
 
+    // Tri et sélection
     scoredWallets.sort((a, b) => b.score - a.score);
-    const validWallets = scoredWallets.filter(w => w.score > 0);
+    const validWallets = scoredWallets.slice(0, 7); // On garde le Top 7 max
 
     renderResultsUI(archTitle, archDesc, validWallets, validMetals, warnings, isMultisig);
 }
 
 // ------------------------------------------------------------
-// GENERATEUR DE PROCÉDURES (FINAL)
+// GENERATEUR DE PROCÉDURES (MODIFICATION 4)
 // ------------------------------------------------------------
 function getProcedures(arch, isMultisig) {
     let procs = [];
     
-    // 1. BASE
+    // SETUP
     procs.push({ t: T.proc_setup, d: T.proc_setup_desc });
     procs.push({ t: T.proc_restore, d: T.proc_restore_desc });
 
-    // 2. PRIVACY
+    // PRIVACY
     if (answers.q7 === 'no_kyc') procs.push({ t: T.proc_privacy, d: T.proc_privacy_desc, alert: true });
 
-    // 3. ARCHITECTURE SPECIFICS
+    // SPECIFIQUE MULTISIG
+    if (isMultisig) {
+        // Procedure Solo Multisig (Nouveau)
+        if (answers.q6 === 'none' || answers.q6 === 'tech_heir') {
+             procs.push({ t: T.proc_solo_multisig, d: T.proc_solo_multisig_desc });
+        }
+        procs.push({ t: T.proc_multisig, d: T.proc_multisig_desc, alert: true });
+        procs.push({ t: T.proc_test_multisig, d: T.proc_test_multisig_desc }); // Répétition générale
+    }
+
+    // PASSPHRASE
     if (arch.includes('Passphrase')) {
         procs.push({ t: T.proc_decoy, d: T.proc_decoy_desc });
         procs.push({ t: T.proc_passphrase_storage, d: T.proc_passphrase_storage_desc });
+        if (answers.q6 !== 'none') {
+            procs.push({ t: T.proc_passphrase_legacy, d: T.proc_passphrase_legacy_desc, alert: true });
+        }
     }
-    if (isMultisig) procs.push({ t: T.proc_multisig, d: T.proc_multisig_desc, alert: true });
+
+    // LIANA
     if (arch.includes('Liana')) procs.push({ t: T.proc_liana, d: T.proc_liana_desc });
 
-    // 4. EXPERT & NOMAD
+    // EXPERT / DICE
     if (answers.q8 === 'dice') procs.push({ t: T.proc_entropy, d: T.proc_entropy_desc });
-    if (answers.q3_bis === 'nomad') procs.push({ t: T.proc_border, d: T.proc_border_desc });
 
-    // 5. SUCCESSION
+    // NOMAD (Border Wallet)
+    if (answers.q3_bis === 'nomad' || answers.q1 === '3') {
+        procs.push({ t: T.proc_border, d: T.proc_border_desc });
+    }
+
+    // LEGACY
     const legacy = answers.q6;
-    
-    if (legacy === 'legal') {
-        procs.push({ t: T.proc_legacy_legal, d: T.proc_legacy_legal_desc });
-    }
-    
-    if (legacy === 'family') {
-        procs.push({ t: T.proc_family, d: T.proc_family_desc });
-    }
+    if (legacy === 'legal') procs.push({ t: T.proc_legacy_legal, d: T.proc_legacy_legal_desc });
+    if (legacy === 'family') procs.push({ t: T.proc_family, d: T.proc_family_desc });
 
-    // 6. FIX DEAD-END (PASSPHRASE + HÉRITAGE)
-    if (arch.includes('Passphrase') && legacy !== 'none') {
-        procs.push({ t: T.proc_passphrase_legacy, d: T.proc_passphrase_legacy_desc, alert: true });
-    }
-
-    // 7. MAINTENANCE
+    // HEALTH CHECK (Toujours à la fin)
     procs.push({ t: T.proc_health, d: T.proc_health_desc });
 
     return procs;
 }
 
+// Le reste (renderResultsUI et showLazyRichExit) reste identique à V2.9
+// sauf exit_lazy qui est mis à jour dans KB, pas ici.
+
 function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) {
     const container = document.getElementById('result-content');
     
-    // --- COLUMNS & SORTING ---
+
+    // --- COLUMNS & SORTING (LOCALIZED) ---
     let cols = [
-        { id: 'tactile', lbl: 'Tactile/Clavier', icon: 'fa-keyboard', weight: 10 },
-        { id: 'secure_element', lbl: 'Puce Sécu.', icon: 'fa-microchip', weight: 10 },
-        { id: 'stealth', lbl: 'Discret', icon: 'fa-eye-slash', weight: 5 },
-        { id: 'opensource', lbl: 'Open Source', icon: 'fa-code', weight: 10 },
-        { id: 'airgap', lbl: 'AirGap', icon: 'fa-wifi', weight: 10 },
-        { id: 'btc_only', lbl: 'BTC Only', icon: 'fa-bitcoin', weight: 10 },
-        { id: 'ble', lbl: 'Bluetooth', icon: 'fa-brands fa-bluetooth', weight: 5 },
-        { id: 'nfc', lbl: 'NFC', icon: 'fa-mobile-signal', weight: 5 },
-        { id: 'tor', lbl: 'Tor', icon: 'fa-user-secret', weight: 5 },
-        { id: 'shamir', lbl: 'Shamir', icon: 'fa-puzzle-piece', weight: 5 }
+        { id: 'tactile', lbl: T.matrix_tactile, icon: 'fa-keyboard', weight: 10 },
+        { id: 'secure_element', lbl: T.matrix_secure, icon: 'fa-microchip', weight: 10 },
+        { id: 'stealth', lbl: T.matrix_stealth, icon: 'fa-eye-slash', weight: 5 },
+        { id: 'opensource', lbl: T.matrix_opensource, icon: 'fa-code', weight: 10 },
+        { id: 'airgap', lbl: T.matrix_airgap, icon: 'fa-wifi', weight: 10 },
+        { id: 'btc_only', lbl: T.matrix_btc, icon: 'fa-bitcoin', weight: 10 },
+        { id: 'ble', lbl: T.matrix_ble, icon: 'fa-brands fa-bluetooth', weight: 5 },
+        { id: 'nfc', lbl: T.matrix_nfc, icon: 'fa-mobile-signal', weight: 5 },
+        { id: 'tor', lbl: T.matrix_tor, icon: 'fa-user-secret', weight: 5 },
+        { id: 'shamir', lbl: T.matrix_shamir, icon: 'fa-puzzle-piece', weight: 5 }
     ];
 
     if (arch.includes('Passphrase')) {
@@ -408,9 +466,10 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
     // --- HTML GENERATION ---
     let matrixHtml = '';
     if (wallets.length === 0) {
-        matrixHtml = '<div class="text-red-400 p-4 border border-red-500 rounded bg-slate-800">Aucun matériel compatible.</div>';
+        // Fallback ultime (Ne devrait plus arriver avec le soft scoring)
+        matrixHtml = '<div class="text-red-400 p-4 border border-red-500 rounded bg-slate-800">Aucun résultat parfait. Regardez : Trezor Safe 3 ou Ledger Flex.</div>';
     } else {
-        let thead = `<th class="th-model">Modèle</th>` + cols.map(c => `<th><div class="flex flex-col items-center gap-1"><i class="fa-solid ${c.icon} text-slate-500 text-lg"></i><span>${c.lbl}</span></div></th>`).join('');
+        let thead = `<th class="th-model">${T.matrix_model}</th>` + cols.map(c => `<th><div class="flex flex-col items-center gap-1"><i class="fa-solid ${c.icon} text-slate-500 text-lg"></i><span>${c.lbl}</span></div></th>`).join('');
         
         let tbody = wallets.map(w => {
             let cells = cols.map(c => {
@@ -441,19 +500,50 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
         matrixHtml = `<div class="matrix-container"><table class="matrix-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
     }
 
-    let metalsHtml = metals.map(m => `
-        <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 flex justify-between items-center mb-2">
-            <div>
-                <div class="font-bold text-white text-sm">${m.name}</div>
-                <div class="text-xs text-orange-400 font-mono">${m.material} • ${m.resistance}</div>
+    let metalsHtml = metals.map(m => {
+        const isShamir = m.features && m.features.includes('shamir');
+        const isPunch = m.features && m.features.includes('punch');
+        const isTitanium = m.features && (m.features.includes('titanium') || m.features.includes('molybdenum'));
+        
+        // Tooltips et Textes localisés via T
+        const shamirBadge = isShamir 
+            ? `<div class="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/30" title="${T.metal_tip_shamir}">
+                 <i class="fa-solid fa-puzzle-piece text-xs"></i>
+               </div>` 
+            : '';
+
+        const typeIcon = isPunch 
+            ? `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_punch}">
+                 <i class="fa-solid fa-hammer text-xs"></i>
+               </div>`
+            : `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_tiles}">
+                 <i class="fa-solid fa-table-cells text-xs"></i>
+               </div>`;
+
+        const fireColor = isTitanium ? 'text-red-400' : 'text-orange-400';
+        
+        return `
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-3 hover:border-slate-600 transition-colors group">
+            <div class="flex-grow">
+                <div class="font-bold text-white text-sm flex items-center gap-2">
+                    ${m.name}
+                    ${isTitanium ? `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">${T.metal_badge_ultra}</span>` : ''}
+                </div>
+                <div class="text-xs ${fireColor} font-mono mt-1 flex items-center gap-2" title="${T.metal_tip_fire}">
+                    <i class="fa-solid fa-fire"></i> ${m.resistance}
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[200px]">${m.material}</div>
             </div>
-            <i class="fa-solid fa-shield-halved text-slate-600"></i>
-        </div>
-    `).join('');
+            
+            <div class="flex items-center gap-2 pl-3 border-l border-slate-700 ml-2">
+                ${shamirBadge}
+                ${typeIcon}
+            </div>
+        </div>`;
+    }).join('');
 
     let warnHtml = warnings.map(w => `<div class="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded text-sm text-yellow-200 flex items-start gap-3"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>${w}</div></div>`).join('');
 
-    // --- PROCEDURES RENDER ---
     const procedures = getProcedures(arch, isMultisig);
     let procsHtml = procedures.map((p, i) => `
         <div class="bg-slate-800 border ${p.alert ? 'border-red-500' : 'border-slate-700'} rounded-xl p-6 flex gap-5 hover:border-slate-600 transition-colors">
@@ -466,40 +556,54 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
     `).join('');
 
     container.innerHTML = `
-        <div class="glass-panel p-8 rounded-xl border-t-4 border-blue-500 mb-10 bg-slate-800/90 shadow-2xl">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400"><i class="fa-solid fa-chess-rook text-xl"></i></div>
-                <h3 class="text-blue-400 text-xs font-bold uppercase tracking-widest">${T.res_arch_title}</h3>
-            </div>
-            <div class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">${arch}</div>
-            <p class="text-lg text-slate-300 leading-relaxed max-w-3xl">${archDesc}</p>
-            ${warnHtml}
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-            <div class="lg:col-span-2 space-y-6">
-                <div class="section-header border-slate-500"><i class="fa-solid fa-list-check"></i> ${T.res_proc_title}</div>
-                ${procsHtml}
+            <div class="glass-panel p-8 rounded-xl border-t-4 border-blue-500 mb-10 bg-slate-800/90 shadow-2xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="p-2 bg-blue-500/10 rounded-lg text-blue-400"><i class="fa-solid fa-chess-rook text-xl"></i></div>
+                    <h3 class="text-blue-400 text-xs font-bold uppercase tracking-widest">${T.res_arch_title}</h3>
+                </div>
+                <div class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">${arch}</div>
+                <p class="text-lg text-slate-300 leading-relaxed max-w-3xl">${archDesc}</p>
+                ${warnHtml}
             </div>
 
-            <div class="h-fit">
-                <div class="section-header border-slate-400"><i class="fa-solid fa-shield-halved"></i> ${T.res_metal_title}</div>
-                <div class="glass-panel p-4 rounded-xl bg-slate-800/90">
-                    <div class="mb-4 text-xs text-slate-400">Modèles compatibles avec votre profil de risque (Triés par prix) :</div>
-                    ${metalsHtml}
+            <!-- GRID PROCÉDURES + MÉTAL (CORRIGÉE ET PARFAITE) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+                <!-- COLONNE GAUCHE : PROCÉDURES (2/3 largeur desktop) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="section-header border-slate-500"><i class="fa-solid fa-list-check"></i> ${T.res_proc_title}</div>
+                    ${procsHtml}
+                </div>
+
+                <!-- COLONNE DROITE : MÉTAL (1/3 largeur) -->
+                <div class="h-fit">
+                    <div class="section-header border-slate-400"><i class="fa-solid fa-shield-halved"></i> ${T.res_metal_title}</div>
+                    <div class="glass-panel p-4 rounded-xl bg-slate-800/90">
+                        <div class="mb-4">
+                            <div class="text-xs text-slate-400">
+                                Modèles compatibles:
+                            </div>
+                            
+                            ${answers.q1 === '3' && !(answers.q5 || []).includes('opt_fire_ext') ? `
+                                <div class="mt-2 text-xs text-amber-400 flex items-start gap-1.5 leading-tight">
+                                    <i class="fa-solid fa-circle-info mt-0.5 text-amber-500"></i>
+                                    <span>Patrimoine vital → priorité aux métaux haute résistance (recommandation 2025)</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${metalsHtml}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div>
-            <div class="section-header border-orange-500"><i class="fa-solid fa-microchip"></i> ${T.res_hw_title}</div>
-            ${matrixHtml}
-        </div>
-    `;
+            <!-- HARDWARE MATRIX -->
+            <div>
+                <div class="section-header border-orange-500"><i class="fa-solid fa-microchip"></i> ${T.res_hw_title}</div>
+                ${matrixHtml}
+            </div>
+        `;
 }
 
 function showLazyRichExit() {
-    // ... Code identical to V2.6
     document.getElementById('quiz-panel').classList.add('hidden');
     document.getElementById('result-panel').classList.remove('hidden');
     document.getElementById('result-content').innerHTML = `
@@ -522,6 +626,13 @@ function showLazyRichExit() {
                         <div>
                             <div class="text-white font-bold">Nunchuk Honey Badger</div>
                             <div class="text-sm text-slate-400">Souveraineté maximale, Zero KYC, Idéal pour la privacy.</div>
+                        </div>
+                    </div>
+                     <div class="flex gap-4">
+                        <div class="bg-purple-900/30 p-3 rounded h-fit text-purple-400"><i class="fa-solid fa-vault"></i></div>
+                        <div>
+                            <div class="text-white font-bold">Unchained Capital / TheYa</div>
+                            <div class="text-sm text-slate-400">Solutions collaboratives réputées (USA/Europe).</div>
                         </div>
                     </div>
                 </div>
