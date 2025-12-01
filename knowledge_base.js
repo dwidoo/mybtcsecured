@@ -187,7 +187,35 @@ const KB = {
             block_full_title: "Code Vérifiable",
             block_full_desc: "Le code source de cet outil est public. Conformément à la philosophie Bitcoin ('Don't Trust, Verify'), vous pouvez l'auditer librement.",
             
-            footer_github: "Code Source (GitHub)"
+            footer_github: "Code Source (GitHub)",
+
+            // --- SYNTHÈSE PROFIL (DEBUG/RESUME) ---
+            sum_title: "Synthèse de votre profil",
+            sum_default: "Standard / Non spécifié",
+            sum_risk_none: "Aucun risque spécifique",
+            
+            // Labels des catégories du résumé
+            cat_q1: "Enjeu Financier",
+            cat_q1_bis: "Stratégie",
+            cat_q2: "Compétence",
+            cat_q2_bis: "Accessibilité",
+            cat_q3: "Matériel",
+            cat_q3_bis: "Mobilité",
+            cat_q4: "Menace Physique",
+            cat_q5: "Risques Stockage",
+            cat_q6: "Transmission",
+            cat_q7: "Confidentialité",
+            cat_q8: "Entropie (Aléa)",
+
+            // --- PAGE GARDE COLLABORATIVE (Lazy Exit) ---
+            exit_casa_title: "Casa Premium / Private",
+            exit_casa_desc: "Le standard pour les patrimoines élevés. Support humain 24/7.",
+            
+            exit_nunchuk_title: "Nunchuk Honey Badger",
+            exit_nunchuk_desc: "Souveraineté maximale, Zero KYC, Idéal pour la privacy.",
+            
+            exit_unchained_title: "Unchained Capital / TheYa",
+            exit_unchained_desc: "Solutions collaboratives réputées (USA/Europe).",
         }
     },
     

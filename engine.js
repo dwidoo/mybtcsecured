@@ -110,16 +110,36 @@ function prevQuestion() {
 }
 
 function shouldSkip(qId) {
-    if (qId === 'q1_bis' && answers.q1 !== '3') return true;
+    const tier = answers.q1; // '1', '2', '3'
+    const skill = answers.q2; // 'beginner', 'intermediate', 'expert'
     
-    // MODIFICATION 3: On affiche q8 (Dés) pour Expert OU Tier 3 (Vital)
-    // Avant : if (qId === 'q8' && answers.q2 !== 'expert') return true;
-    if (qId === 'q8') {
-        const isExpert = answers.q2 === 'expert';
-        const isVital = answers.q1 === '3';
-        if (!isExpert && !isVital) return true; // On skip seulement si ni expert ni vital
+    // --- FILTRE 1 : L'APPROCHE ASSISTÉE ---
+    // CORRECTION : On autorise l'assistance pour Tier 2 et 3.
+    // On ne la saute que pour le Tier 1 (Montant trop faible pour justifier les frais).
+    if (qId === 'q1_bis' && tier === '1') return true;
+
+    // --- FILTRE 2 : TIER 1 (ARGENT DE POCHE) ---
+    // Objectif : Rapidité.
+    if (tier === '1') {
+        // On garde : Q2 (Skill), Q2_bis (Handicap), Q3 (Device)
+        // On saute tout le reste
+        if (['q3_bis', 'q4', 'q5', 'q6', 'q7', 'q8'].includes(qId)) return true;
     }
-    
+
+    // --- FILTRE 3 : TIER 2 (ÉPARGNE SIGNIFICATIVE) ---
+    if (tier === '2') {
+        // On garde Q1_bis (Assistance), Q4 (Menace), Q6 (Héritage), Q7 (Privacy)
+        
+        // On saute les Dés (Q8) sauf si Expert (inutile de complexifier pour un profil intermédiaire)
+        if (qId === 'q8' && skill !== 'expert') return true;
+        
+        // On peut garder le reste (Voyage, etc) pour ce niveau d'enjeu.
+    }
+
+    // --- FILTRE 4 : DÉPENDANCE À LA COMPÉTENCE ---
+    // Règle de sécurité absolue : Pas de dés pour les débutants, jamais.
+    if (skill === 'beginner' && qId === 'q8') return true;
+
     return false;
 }
 
@@ -196,14 +216,44 @@ function handleMultiAnswer(checkbox) {
 
 function handleAnswer(qId, val) {
     answers[qId] = val;
-    if (qId === 'q1_bis' && val === 'assisted') { showLazyRichExit(); return; }
+    
+    // --- CORRECTION CRITIQUE V3.2 ---
+    // Si l'utilisateur choisit "Assisté" (q1_bis), on vérifie son Tier (q1).
+    if (qId === 'q1_bis' && val === 'assisted') {
+        // Si c'est Tier 1 (Modeste), ON IGNORE la sortie "Riche" et on continue le quiz.
+        // Cela permet de lui proposer un Bitkey/Ledger simple plus tard.
+        if (answers.q1 === '1') { 
+            nextStep(); 
+            return; 
+        }
+        
+        // Sinon (Tier 2 ou 3), on sort vers la Garde Collaborative
+        showLazyRichExit(); 
+        return;
+    }
+    
     nextStep();
 }
 
 function nextStep() {
     currentStep++;
-    if (currentStep >= QUESTION_FLOW.length) finishQuiz();
-    else renderQuestion();
+    
+    // Sécurité fin de quiz
+    if (currentStep >= QUESTION_FLOW.length) {
+        finishQuiz();
+    } else {
+        // --- LOGIQUE RÉCURSIVE DE SAUT ---
+        // On récupère l'ID de la prochaine question
+        const nextQ = QUESTION_FLOW[currentStep];
+        
+        // Si on doit la sauter, on rappelle nextStep() immédiatement
+        if (shouldSkip(nextQ)) {
+            nextStep(); 
+        } else {
+            // Sinon on l'affiche
+            renderQuestion();
+        }
+    }
 }
 
 function finishQuiz() {
@@ -221,6 +271,24 @@ function finishQuiz() {
 // ============================================================
 
 function calculateResults() {
+    // --- 0. AUTO-FILL INTELLIGENT ---
+    
+    // Valeurs par défaut universelles (au cas où)
+    if (!answers.q5) answers.q5 = [];              // Pas de risque incendie spécifique
+    if (!answers.q8) answers.q8 = 'opt_chip';      // Entropie par puce (Standard)
+    
+    // AUTO-FILL TIER 1 (Modeste) - On remplit tout ce qu'on a sauté
+    if (answers.q1 === '1') {
+        if (!answers.q1_bis) answers.q1_bis = 'sovereign'; // Pas d'assistance pour petits montants
+        if (!answers.q3_bis) answers.q3_bis = 'static';    // Sédentaire
+        if (!answers.q4) answers.q4 = 'opt_low';           // Menace faible
+        if (!answers.q6) answers.q6 = 'none';              // Pas d'héritage
+        if (!answers.q7) answers.q7 = 'opt_kyc';           // Privacy standard
+    }
+
+    // AUTO-FILL TIER 2 & 3
+    // Si Q8 a été sauté (car pas expert), la valeur par défaut 'opt_chip' ci-dessus s'applique.
+    // Le reste a été posé à l'utilisateur.
     const tier = answers.q1; // '1', '2', '3'
     const skill = answers.q2; // 'beginner', 'intermediate', 'expert'
     const handicap = answers.q2_bis === 'handicap';
@@ -346,6 +414,13 @@ function calculateResults() {
         if (isMultisig && (w.id === 'coldcard_q1' || w.id === 'seedsigner' || w.id === 'bitbox02')) score += 30; // Les rois du multisig
         if (isShamir && w.features.includes('shamir')) score += 50;
         if (tier === '3' && w.features.includes('airgap')) score += 25; // Airgap valorisé pour Tier 3
+
+        // BONUS PETIT BUDGET ---
+        // Si l'utilisateur a un "Enjeu Gérable" (Tier 1), on favorise massivement les wallets < 100€
+        if (tier === '1' && w.price < 100) score += 40;
+        
+        // Bonus intermédiaire pour les wallets < 160€ 
+        if (tier === '1' && w.price >= 100 && w.price < 160) score += 20;
         
         // Bonus Confiance (Dice)
         if (trust === 'dice' && w.features.includes('dice')) score += 40;
@@ -600,41 +675,111 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
                 <div class="section-header border-orange-500"><i class="fa-solid fa-microchip"></i> ${T.res_hw_title}</div>
                 ${matrixHtml}
             </div>
+
+            ${getProfileSummaryHtml()}
         `;
 }
 
 function showLazyRichExit() {
     document.getElementById('quiz-panel').classList.add('hidden');
     document.getElementById('result-panel').classList.remove('hidden');
+    
+    const summary = getProfileSummaryHtml(); 
+    
     document.getElementById('result-content').innerHTML = `
-        <div class="text-center p-10 max-w-2xl mx-auto">
-            <i class="fa-solid fa-handshake-angle text-6xl text-blue-500 mb-6"></i>
-            <h2 class="text-3xl font-bold text-white mb-4">${T.exit_lazy}</h2>
-            <p class="text-lg text-slate-300 mb-8">${T.exit_lazy_desc}</p>
-            <div class="bg-slate-800 p-6 rounded-xl text-left border border-slate-700">
-                <div class="font-bold text-white mb-4">${T.exit_lazy_sol}</div>
-                <div class="space-y-4">
-                    <div class="flex gap-4">
+        <div class="text-center p-6 md:p-10 max-w-3xl mx-auto">
+            <i class="fa-solid fa-handshake-angle text-5xl md:text-6xl text-blue-500 mb-6"></i>
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-4">${T.exit_lazy}</h2>
+            <p class="text-lg text-slate-300 mb-8 leading-relaxed">${T.exit_lazy_desc}</p>
+            
+            <div class="bg-slate-800 p-6 rounded-xl text-left border border-slate-700 shadow-xl mb-8">
+                <div class="font-bold text-white mb-6 border-b border-slate-700 pb-2">${T.exit_lazy_sol}</div>
+                <div class="space-y-6">
+                     <div class="flex gap-4">
                         <div class="bg-blue-900/30 p-3 rounded h-fit text-blue-400"><i class="fa-solid fa-gem"></i></div>
                         <div>
-                            <div class="text-white font-bold">Casa Premium / Private</div>
-                            <div class="text-sm text-slate-400">Le standard pour les patrimoines élevés. Support humain 24/7.</div>
+                            <div class="text-white font-bold">${T.exit_casa_title}</div>
+                            <div class="text-sm text-slate-400">${T.exit_casa_desc}</div>
                         </div>
                     </div>
                     <div class="flex gap-4">
                         <div class="bg-green-900/30 p-3 rounded h-fit text-green-400"><i class="fa-solid fa-shield-cat"></i></div>
                         <div>
-                            <div class="text-white font-bold">Nunchuk Honey Badger</div>
-                            <div class="text-sm text-slate-400">Souveraineté maximale, Zero KYC, Idéal pour la privacy.</div>
+                            <div class="text-white font-bold">${T.exit_nunchuk_title}</div>
+                            <div class="text-sm text-slate-400">${T.exit_nunchuk_desc}</div>
                         </div>
                     </div>
                      <div class="flex gap-4">
                         <div class="bg-purple-900/30 p-3 rounded h-fit text-purple-400"><i class="fa-solid fa-vault"></i></div>
                         <div>
-                            <div class="text-white font-bold">Unchained Capital / TheYa</div>
-                            <div class="text-sm text-slate-400">Solutions collaboratives réputées (USA/Europe).</div>
+                            <div class="text-white font-bold">${T.exit_unchained_title}</div>
+                            <div class="text-sm text-slate-400">${T.exit_unchained_desc}</div>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            ${summary}
+        </div>
+    `;
+}
+
+function getProfileSummaryHtml() {
+    // Mapping utilisant les nouvelles clés de KB
+    const map = {
+        q1: { l: T.cat_q1, t: T.q1 },
+        q1_bis: { l: T.cat_q1_bis, t: T.q1_bis },
+        q2: { l: T.cat_q2, t: T.q2 },
+        q2_bis: { l: T.cat_q2_bis, t: T.q2_bis },
+        q3: { l: T.cat_q3, t: T.q3 },
+        q3_bis: { l: T.cat_q3_bis, t: T.q3_bis },
+        q4: { l: T.cat_q4, t: T.q4 },
+        q5: { l: T.cat_q5, t: T.q5 },
+        q6: { l: T.cat_q6, t: T.q6 },
+        q7: { l: T.cat_q7, t: T.q7 },
+        q8: { l: T.cat_q8, t: T.q8 }
+    };
+
+    let itemsHtml = '';
+    const order = ['q1', 'q1_bis', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8']; // Ordre d'affichage
+
+    order.forEach(key => {
+        // Si pas de réponse et pas Q5 (array), on saute
+        if (!answers[key] && key !== 'q5') return; 
+
+        const conf = map[key];
+        let userVal = answers[key];
+        let labelVal = T.sum_default;
+
+        if (userVal) {
+            if (key === 'q5' && Array.isArray(userVal)) {
+                if(userVal.length === 0 || userVal.includes('opt_none')) labelVal = T.sum_risk_none;
+                else labelVal = userVal.map(v => (conf.t[v] || v).replace(/ *\([^)]*\) */g, "")).join(', ');
+            } 
+            else {
+                // Récupération propre du texte
+                let rawLabel = conf.t['opt_' + userVal] || conf.t[userVal] || userVal;
+                // Nettoyage des parenthèses
+                if (typeof rawLabel === 'string') labelVal = rawLabel.split('(')[0].trim();
+            }
+        }
+
+        itemsHtml += `
+            <div class="flex justify-between border-b border-slate-700/50 pb-2 mb-2 last:border-0 last:mb-0">
+                <span class="text-slate-500 text-xs uppercase font-semibold">${conf.l}</span>
+                <span class="text-slate-300 text-xs font-medium text-right max-w-[60%]">${labelVal}</span>
+            </div>
+        `;
+    });
+
+    return `
+        <div class="mt-10 border-t border-slate-800 pt-8">
+            <div class="bg-slate-900/80 rounded-xl p-6 border border-slate-700">
+                <div class="text-xs text-[#f7931a] font-bold mb-4 flex items-center gap-2 uppercase tracking-widest">
+                    <i class="fa-solid fa-list-check"></i> ${T.sum_title}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
+                    ${itemsHtml}
                 </div>
             </div>
         </div>
