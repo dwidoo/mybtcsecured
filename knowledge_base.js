@@ -3,13 +3,15 @@ const KB = {
     LANG: {
         fr: {
             // SEO & Branding
-            app_title_text: "MyBTCSecured | Architecte de Sécurité Bitcoin",
-            app_brand_html: '<i class="fa-solid fa-shield-halved text-[#f7931a] mr-2"></i>MyBTC<span class="text-[#f7931a]">Secured</span>',
+            app_title_text: "MySecureBTC | Architecte de Sécurité Bitcoin",
+            app_brand_html: '<i class="fa-solid fa-shield-halved text-[#f7931a] mr-2"></i>MySecure<span class="text-[#f7931a]">BTC</span>',
             
             // Loaders
             loading_1: "Analyse des vecteurs d'attaque...",
             loading_2: "Calcul de pertinence (Scoring)...",
             loading_3: "Finalisation du protocole de souveraineté...",
+            load_title: "Analyse en cours...",
+            load_text: "Initialisation du moteur...",
 
             // --- QUESTIONS ---
             q1: { 
@@ -72,7 +74,9 @@ const KB = {
             res_hw_title: "Sélection Matérielle (Top 7)",
             res_metal_title: "Support de Sauvegarde (Métal)",
             res_proc_title: "Procédures Opérationnelles",
-
+            res_tag: "PROTOCOLE GÉNÉRÉ",
+            res_subtitle: "Voici la configuration recommandée selon vos contraintes.",
+            res_compat: "Modèles compatibles :",
             
             // Descriptions
             arch_single: "Standard Single-Sig",
@@ -174,15 +178,22 @@ const KB = {
             legal_checkbox_offline: "J'ai compris que je peux désactiver ma connexion internet (Mode Avion) dès maintenant pour utiliser l'outil en toute confidentialité.",
             legal_checkbox_terms: "Je certifie avoir lu et accepté les conditions d'utilisation et les avertissements ci-dessus.",
             
+            nav_online: "EN LIGNE",
+            nav_offline: "HORS LIGNE",
             status_online: "Connecté (Standard)",
             status_offline: "Hors-ligne (Recommandé)",
 
-            legal_btn_start: "Accéder au simulateur",           
-            
+            legal_btn_start: "Accéder au simulateur",
+            btn_validate: "Valider la sélection",
+            btn_prev: "Précédent",
+            btn_restart: "Recommencer l'analyse",
+            btn_cancel: "Annuler",           
+            engine_version: "Engine V3.1 (Multi-Lang)",
+
             // --- HERO & HOME ---
             hero_title_1: "Sécurisez vos bitcoins.",
             hero_title_2: "Sans faille.",
-            hero_desc: "Définissez votre <strong>dispositif de sécurité personnalisé</strong> en une minute et en totale confidentalité. Obtenez une recommandation complète (Matériel + Sauvegarde + Procédures) adaptée à votre situation réelle.",
+            hero_desc: "Définissez votre <strong>dispositif de sécurité personnalisé</strong> <span class='text-[#f7931a] font-bold'>en une minute</span> et en totale confidentalité. Obtenez une recommandation complète (Matériel + Sauvegarde + Procédures) adaptée à votre situation réelle.",
             hero_btn: "Configurer mon dispositif",
             
             // BLOCS RASSURANCE
@@ -222,6 +233,392 @@ const KB = {
             
             exit_unchained_title: "Unchained Capital / TheYa",
             exit_unchained_desc: "Solutions collaboratives réputées (USA/Europe).",
+
+            // --- PRODUITS (Traductions) ---
+            // Clés construites sur : 'desc_' + id_wallet et 'mat_' + id_metal
+            
+            // WALLETS
+            desc_coldcard_q1: "Station AirGap ultime. Clavier QWERTY complet.",
+            desc_trezor_safe7: "Standard 2025. Haptic Touch & Puce Transparente.",
+            desc_ledger_flex: "Écran E-Ink sécurisé. Lisibilité parfaite.",
+            desc_ledger_nanox: "Format clé USB discret. Standard Bluetooth éprouvé.",
+            desc_bitkey: "Simplicité absolue. Multisig assisté.",
+            desc_trezor_safe5: "L'expérience tactile 100% Open Source.",
+            desc_bitbox02: "Discrète, Suisse, redoutable d'efficacité.",
+            desc_jade: "Sécurité AirGap accessible via QR Code.",
+            desc_keystone3: "Expérience Smartphone 100% AirGap.",
+            desc_passport: "Design Premium Bitcoin-only.",
+            desc_trezor_safe3: "Entrée de gamme robuste.",
+            desc_seedsigner: "À construire soi-même. Stateless.",
+            desc_ledger_stax: "Écran incurvé géant.",
+            desc_tangem: "Format carte NFC, backup multi-cartes, EAL6+.",
+            desc_ngrave_zero: "100% airgap QR, EAL7, auto-destruction.",
+            desc_ellipal_titan2: "Airgap total QR, écran 4\".",
+            desc_cypherock_x1: "Shamir split sur 5 cartes NFC, sans Seed.",
+            desc_ledger_nanogen5: "L'héritier du Nano S. Écran tactile E-Ink.",
+            desc_bitbox02_nova: "Évolution avec verre trempé et Bluetooth.",
+            desc_jade_plus: "Version Premium : écran IPS plus grand.",
+            desc_passport_prime: "Le 'Blackberry' du Bitcoin devient tactile.",
+            desc_onekey_pro: "4 Éléments Sécurisés & Biométrie.",
+            desc_tangem_ring: "Bague de paiement/accès crypto.",
+
+            // METALS (Matériaux & Résistance)
+            // Format : mat_ + id : "Nom Matériau"
+            // Format : res_ + id : "Température"
+            
+            mat_cryptotag_zeus: "Titane Grade 2",
+            
+            mat_coinkite_seedplate: "Acier Inox 316L",
+            
+            mat_hodlinox: "Acier Inox 304",
+            
+            mat_blockplate: "Acier Inox 304",
+            
+            mat_coinplate: "Acier Inox 304",
+            
+            mat_trezor_keep_triple: "Acier 304",
+            
+            mat_cryptotag_thor: "Titane Grade 2",
+            
+            mat_ngrave_graphene: "Acier Inox (Embossage)",
+            
+            mat_billfodl: "Acier Inox 316 Marine",
+            
+            mat_cryptosteel_capsule: "Acier Inox 304",
+            
+            mat_safepal_cypher: "Acier Inox 304",
+            
+            mat_keystone_tablet: "Acier Inox 304",
+            
+            mat_safeseed_moly: "Molybdène",
+            
+            mat_secux_xseed_pro: "Acier Inox 304",
+            
+            mat_cryptosteel_seed12: "Acier Inox 304",
+            
+            mat_stampseed_kit: "Titane Aerospace",
+
+            mat_imkey_heirbox_s1: "Acier Inox 304",
+            
+            mat_ellipal_seed_phrase_steel: "Acier Inox 316",
+            
+            mat_bitbox_steelwallet: "Acier Inox 304",
+            
+            mat_tinyseed: "Titane Pur",
+            
+            mat_coldti: "Titane",
+        },
+
+        en: {
+            // SEO & Branding
+            app_title_text: "MySecureBTC | Bitcoin Security Architect",
+            app_brand_html: '<i class="fa-solid fa-shield-halved text-[#f7931a] mr-2"></i>MySecure<span class="text-[#f7931a]">BTC</span>',
+            
+            // Loaders
+            loading_1: "Analyzing attack vectors...",
+            loading_2: "Calculating relevance score...",
+            loading_3: "Finalizing sovereignty protocol...",
+            load_title: "Analysis in progress...",
+            load_text: "Engine initializing...",
+
+            // --- QUESTIONS ---
+            q1: { 
+                text: "If you lost access to your bitcoins tomorrow, what would be the impact?", 
+                info: "Helps calibrate the necessary budget and security complexity.", 
+                opt_1: "Manageable (Modest sum / Pocket money)", 
+                opt_2: "Painful (Significant savings)", 
+                opt_3: "Life-Changing (Life savings / Retirement)" 
+            },
+            q1_bis: { 
+                text: "To manage these assets, what is your approach?", 
+                info: "Total autonomy requires rigor. Assistance reduces the risk of technical errors.", 
+                opt_sovereign: "Sovereign (I want to master the tech from A to Z)", 
+                opt_assisted: "Assisted Security (I prefer to delegate technical complexity)" 
+            },
+            q2: { 
+                text: "What is your comfort level with IT/Computers?", 
+                info: "A protocol too complex for your skills increases the risk of mistakes.", 
+                opt_beginner: "Standard (I want a simple, guided interface)", 
+                opt_intermediate: "Intermediate (I can install software and follow a tutorial)", 
+                opt_expert: "Advanced (Command line, PGP, compiling...)" 
+            },
+            q2_bis: { 
+                text: "Do you have any physical constraints (Vision or Dexterity)?", 
+                info: "Poor eyesight or shaky hands drastically increase the risk of error when copying addresses.", 
+                opt_ok: "No, standard vision and motor skills", 
+                opt_handicap: "Yes (I need a large screen or very airy interface)" 
+            },
+            q3: { 
+                text: "Which devices will you use? (Multi-choice)", 
+                info: "Select all devices likely to handle transactions. The proposed hardware will be compatible with all.", 
+                opt_ios: "iPhone (iOS)", 
+                opt_android: "Android", 
+                opt_desktop: "Computer (Mac / Windows / Linux)" 
+            },
+            q3_bis: { 
+                text: "Will this hardware need to cross borders?", 
+                info: "Traveling with a physical hardware wallet can attract attention at security checkpoints.", 
+                opt_static: "No, sedentary storage (Home/Safe)", 
+                opt_nomad: "Yes, I plan to travel with my keys (Customs risk)" 
+            },
+            q4: { 
+                text: "Against which physical threat do you want protection?", 
+                info: "If a malicious person forces you to unlock your device.", 
+                opt_low: "Simple Theft (Burglary in my absence)", 
+                opt_decoy: "Duress (I want to be able to give a credible 'fake' PIN code)", 
+                opt_bunker: "Kidnapping (Impossible to pay even under threat)", 
+                opt_dk: "I don't know (Recommended: Decoy Mode)" 
+            },
+            q5: { 
+                text: "What environmental risks threaten your backup (Words)?", 
+                info: "Paper burns. Ink fades. Select all potential risks.", 
+                opt_fire_std: "Domestic Fire (~600°C)", 
+                opt_fire_ext: "Extreme/Industrial Fire (>1000°C)", 
+                opt_water: "Flood / Humidity / Corrosion", 
+                opt_social: "Prying Eyes (I want my words to be unreadable to others)", 
+                opt_none: "None (Secure bank vault)" 
+            },
+            q6: { 
+                text: "Have you organized the transmission of your assets (Inheritance)?", 
+                info: "Without an explicit protocol, your bitcoins risk being lost in case of death.", 
+                opt_none: "No (Risk accepted for now)", 
+                opt_legal: "Yes, via a trusted third party (Notary/Lawyer)", 
+                opt_tech_heir: "Yes, I have a technically competent relative", 
+                opt_family: "Yes, I have heirs but they are beginners" 
+            },
+            q7: { 
+                text: "What importance do you place on privacy?", 
+                info: "Determines software choices to avoid linking your identity to your funds.", 
+                opt_kyc: "Standard (I use regulated platforms)", 
+                opt_no_kyc: "High (I want to minimize my digital footprint)", 
+                opt_dk: "Standard" 
+            },
+            q8: { 
+                text: "Private Key Generation (Entropy):", 
+                info: "How your 12/24 words are chosen. Physical randomness is the gold standard.", 
+                opt_chip: "Automatic (Recommended: Secure Chip or Open Source)", 
+                opt_dice: "Dice / Math (Max Sovereignty - Expert Mode)", 
+                opt_dk: "I don't know (Automatic)" 
+            },
+
+            // --- RESULTS ---
+            res_arch_title: "Security Architecture",
+            res_hw_title: "Hardware Selection (Compatible)",
+            res_metal_title: "Backup Medium (Metal)",
+            res_proc_title: "Operational Procedures",
+            res_tag: "PROTOCOL GENERATED",
+            res_subtitle: "Here is the recommended configuration based on your constraints.",
+            res_compat: "Compatible models:",
+            
+            // Descriptions
+            arch_single: "Standard Single-Sig",
+            arch_single_desc: "The reference architecture. You own a single key (12 or 24 words). It is the best security/complexity balance for starting out.",
+            arch_passphrase: "Single-Sig + Passphrase (Decoy)",
+            arch_passphrase_desc: "Advanced architecture. You add a memorized password to your backup. This generates two wallets: a 'decoy' for daily use, and a 'secret' one for savings.",
+            arch_multisig: "Distributed Multisig (2-of-3)",
+            arch_multisig_desc: "The digital vault. Requires 2 keys out of 3 to authorize a transaction. Global standard for significant wealth (eliminates single point of failure).",
+            arch_liana: "Time-Lock (Automated Inheritance)",
+            arch_liana_desc: "Using the Liana protocol. If funds do not move for a defined period (e.g., 1 year), a recovery key automatically activates for your heirs.",
+            arch_shamir: "Shamir Backup (Fragmentation)",
+            arch_shamir_desc: "Your key is mathematically divided into multiple shards. No single shard allows access to funds. Offers robust physical redundancy.",
+
+            warn_shamir: "Note: The Shamir standard (SLIP-39) restricts the choice of compatible hardware.",
+            warn_passphrase: "Caution: If you forget the Passphrase, funds in the secret wallet are lost forever.",
+            
+            exit_lazy: "Recommendation: Collaborative Custody",
+            exit_lazy_desc: "Given the importance of the assets and your wish for assistance, solo management presents a risk. Collaborative custody provides a security partner.",
+            exit_lazy_sol: "Recommended Solutions",
+            
+            exit_casa_title: "Casa Premium / Private",
+            exit_casa_desc: "The standard for high net worth. 24/7 human support.",
+            exit_nunchuk_title: "Nunchuk Honey Badger",
+            exit_nunchuk_desc: "Max sovereignty, Zero KYC, Ideal for privacy.",
+            exit_unchained_title: "Unchained Capital / TheYa",
+            exit_unchained_desc: "Reputable collaborative solutions (USA/Europe).",
+
+            metal_tier3_note: "Life savings: we prioritize the most resistant backups, even for domestic fire. The extra cost is negligible compared to the risk.",
+
+            // Procedures
+            proc_setup: "Secure Initialization",
+            proc_setup_desc: "Check packaging integrity. Update firmware. Never enter your words on a connected device (Computer/Phone).",
+            proc_restore: "Recovery Test (Mandatory)",
+            proc_restore_desc: "Before any large deposit: send a small amount, reset the hardware, and restore it with your words to validate the backup.",
+            proc_decoy: "Setting up the Decoy",
+            proc_decoy_desc: "Store a small amount (~5%) on the standard PIN code. Store the rest on the secret PIN code linked to the Passphrase.",
+            proc_entropy: "Dice Entropy",
+            proc_entropy_desc: "Use 100 dice rolls to generate your key. This ensures the secret is purely mathematical and unknown to the manufacturer.",
+            
+            proc_border: "Border Crossing",
+            proc_border_desc: "NEVER travel with your main key. Use a 'Border Wallet' (12 temporary memorized words) or a hidden encrypted microSD.",
+            
+            proc_privacy: "Private Connection",
+            proc_privacy_desc: "Avoid default software in standard mode. Pair your hardware with software like Sparrow Wallet via the Tor network.",
+            
+            proc_solo_multisig: "Solo Multisig (Geo-Isolation)",
+            proc_solo_multisig_desc: "Use 3 hardware wallets (different brands or same). Generate 3 distinct seeds. Store them: 1 at home, 1 in a safe, 1 with a passive third party. No trusted third party required for security, only storage.",
+            
+            proc_multisig: "Descriptor Backup",
+            proc_multisig_desc: "CRITICAL: In Multisig, saving words is not enough. You MUST save the configuration file (XPUBS + Derivation Paths) of all participants.",
+            
+            proc_test_multisig: "Drill (Rehearsal)",
+            proc_test_multisig_desc: "Before transferring the bulk of assets: Create multisig, deposit small amount, wipe ALL wallets, restore them, and perform an outgoing transaction.",
+
+            proc_liana: "Time-Lock Refresh",
+            proc_liana_desc: "Connect at least once a year to sign a transaction and push back the automatic inheritance plan activation.",
+            proc_legacy_legal: "Instructions to Third Party",
+            proc_legacy_legal_desc: "Draft a document indicating WHERE security items are located, without ever writing the codes or words themselves.",
+            proc_family: "Family Response Card",
+            proc_family_desc: "A simple card for heirs: 'Do not reply to anyone. Contact [Expert Name]. My keys are in [Physical Location].'",
+            proc_passphrase_legacy: "Passphrase Transmission",
+            proc_passphrase_legacy_desc: "The Passphrase must be transmitted via a different channel than the main backup (e.g., Notary or separate bank vault).",
+            proc_passphrase_storage: "Passphrase Storage",
+            proc_passphrase_storage_desc: "Never store the Passphrase with the word list. Memorize it or engrave it on a metal support hidden separately.",
+            
+            proc_health: "Annual Audit (Health Check)",
+            proc_health_desc: "Block a recurring date. Check physical integrity of metal backups. Update firmwares. Verify that your loved ones still know where to look.",
+
+            // Matrix & Tooltips
+            matrix_model: "Model",
+            matrix_tactile: "Touch/Keyboard",
+            matrix_secure: "Secure Chip",
+            matrix_stealth: "Stealth",
+            matrix_opensource: "Open Source",
+            matrix_airgap: "AirGap",
+            matrix_btc: "BTC Only",
+            matrix_ble: "Bluetooth",
+            matrix_nfc: "NFC",
+            matrix_tor: "Tor",
+            matrix_shamir: "Shamir",
+
+            metal_badge_ultra: "ULTRA",
+            metal_tip_shamir: "Compatible with Shamir Backup (Key splitting)",
+            metal_tip_punch: "Method: Punch (Indelible / Hammer)",
+            metal_tip_tiles: "Method: Tiles (Sliding / Reusable)",
+            metal_tip_fire: "Thermal Resistance",
+
+            // Profile Summary
+            sum_title: "Profile Summary",
+            sum_default: "Standard / Unspecified",
+            sum_risk_none: "No specific risk",
+            
+            cat_q1: "Financial Stake",
+            cat_q1_bis: "Strategy",
+            cat_q2: "Skill Level",
+            cat_q2_bis: "Accessibility",
+            cat_q3: "Device(s)",
+            cat_q3_bis: "Mobility",
+            cat_q4: "Physical Threat",
+            cat_q5: "Storage Risks",
+            cat_q6: "Transmission",
+            cat_q7: "Privacy",
+            cat_q8: "Entropy (Randomness)",
+
+            // LEGAL
+            legal_title: "Terms & Warnings",
+            legal_p1: "<strong>1. Educational Purpose & No Advice:</strong> This site is a theoretical educational simulator. It constitutes neither financial investment advice, nor a digital asset service (CASP), nor a certified security audit. The publisher provides no custody service and never has access to your funds.",
+            legal_p2: "<strong>2. Limitation of Liability:</strong> Security is an active process incumbent upon the user. The publishing company declines all responsibility in case of loss of funds, theft, phishing, human error, forgotten access codes, or technical failure. The user acknowledges being solely responsible for implementing suggested procedures.",
+            legal_p3: "<strong>3. Third-Party Hardware:</strong> Recommended wallets and supports are manufactured by independent third-party companies. The publisher does not guarantee the reliability, absence of bugs, or longevity of these devices and cannot be held liable for a manufacturing or software defect of these products.",
+            legal_p4: "<strong>4. Data & Acceptance:</strong> No third-party tracking cookies are used. The only existing logs are standard technical host logs, which temporarily collect IP addresses for network security. By continuing, you agree to use this information at your own risk.",
+            
+            legal_checkbox_offline: "I understand I can turn off my internet connection (Airplane Mode) right now to use the tool in total confidentiality.",
+            legal_checkbox_terms: "I certify that I have read and accepted the terms of use and warnings above.",
+            
+            nav_online: "ONLINE",
+            nav_offline: "OFFLINE",
+            status_online: "Online (Standard)",
+            status_offline: "Offline (Recommended)",
+
+            legal_btn_start: "Start Simulator",
+            
+            // HERO
+            hero_title_1: "Secure your bitcoins.",
+            hero_title_2: "Faultlessly.",
+            hero_desc: "Define your <strong>personalized security setup</strong> <span class='text-[#f7931a] font-bold'>in one minute</span> with total confidentiality. Get a full recommendation (Hardware + Backup + Procedures) adapted to your real situation.",
+            hero_btn: "Configure my setup",
+            btn_validate: "Validate selection",
+            btn_prev: "Previous",
+            btn_restart: "Restart analysis",
+            btn_cancel: "Cancel",
+            engine_version: "Engine V3.1 (Multi-Lang)",
+            
+            // RASSURANCE
+            block_anon_title: "Total Privacy",
+            block_anon_desc: "All calculation happens in your browser. No personal data is sent to a server. Works offline.",
+            block_agnostic_title: "Technical Selection",
+            block_agnostic_desc: "Proposed hardware and solutions are selected strictly on their security features (Source code, Secure element, Airgap, etc.).",
+            block_full_title: "Verifiable Code",
+            block_full_desc: "The source code of this tool is public. In accordance with Bitcoin philosophy ('Don't Trust, Verify'), you can audit it freely.",
+            
+            footer_github: "Source Code (GitHub)",
+
+            // WALLETS
+            desc_coldcard_q1: "Ultimate AirGap Station. Full QWERTY keyboard.",
+            desc_trezor_safe7: "2025 Standard. Haptic Touch & Transparent Chip.",
+            desc_ledger_flex: "Secure E-Ink screen. Perfect readability.",
+            desc_ledger_nanox: "Discreet USB key format. Proven Bluetooth standard.",
+            desc_bitkey: "Absolute simplicity. Assisted multisig.",
+            desc_trezor_safe5: "The 100% Open Source tactile experience.",
+            desc_bitbox02: "Discreet, Swiss, frighteningly efficient.",
+            desc_jade: "AirGap security accessible via QR Code.",
+            desc_keystone3: "100% AirGap Smartphone experience.",
+            desc_passport: "Premium Bitcoin-only design.",
+            desc_trezor_safe3: "Robust entry-level choice.",
+            desc_seedsigner: "Build it yourself. Stateless.",
+            desc_ledger_stax: "Giant curved E-Ink screen.",
+            desc_tangem: "NFC card format, multi-card backup, EAL6+.",
+            desc_ngrave_zero: "100% airgap QR, EAL7, self-destruct.",
+            desc_ellipal_titan2: "Total Airgap QR, 4\" screen.",
+            desc_cypherock_x1: "Shamir split on 5 NFC cards, No Seed.",
+            desc_ledger_nanogen5: "The Nano S heir. E-Ink touchscreen.",
+            desc_bitbox02_nova: "Evolution with tempered glass and Bluetooth.",
+            desc_jade_plus: "Premium Version: larger IPS screen.",
+            desc_passport_prime: "The 'Blackberry' of Bitcoin goes touch.",
+            desc_onekey_pro: "4 Secure Elements & Biometrics.",
+            desc_tangem_ring: "Crypto payment/access ring.",
+
+            // METALS (Note: Fahrenheit added here too)
+            mat_cryptotag_zeus: "Titanium Grade 2",
+            
+            mat_coinkite_seedplate: "Stainless Steel 316L",
+            
+            mat_hodlinox: "Stainless Steel 304",
+            
+            mat_blockplate: "Stainless Steel 304",
+            
+            mat_coinplate: "Stainless Steel 304",
+            
+            mat_trezor_keep_triple: "Steel 304",
+            
+            mat_cryptotag_thor: "Titanium Grade 2",
+            
+            mat_ngrave_graphene: "Stainless Steel (Embossed)",
+            
+            mat_billfodl: "Marine Grade 316 Steel",
+            
+            mat_cryptosteel_capsule: "Stainless Steel 304",
+            
+            mat_safepal_cypher: "Stainless Steel 304",
+            
+            mat_keystone_tablet: "Stainless Steel 304",
+            
+            mat_safeseed_moly: "Molybdenum",
+            
+            mat_secux_xseed_pro: "Stainless Steel 304",
+            
+            mat_cryptosteel_seed12: "Stainless Steel 304",
+            
+            mat_stampseed_kit: "Aerospace Titanium",
+
+            mat_imkey_heirbox_s1: "Stainless Steel 304",
+            
+            mat_ellipal_seed_phrase_steel: "Stainless Steel 316",
+            
+            mat_bitbox_steelwallet: "Stainless Steel 304",
+            
+            mat_tinyseed: "Pure Titanium",
+            
+            mat_coldti: "Titanium",
+
         }
     },
     
@@ -371,107 +768,107 @@ const KB = {
     { 
         id: 'cryptotag_zeus', name: 'Cryptotag Zeus', 
         features: ['titanium', 'plate', 'punch', 'diy'],
-        material: 'Titane Grade 2', resistance: 'A+ (>1660°C)', shamir: false, price: 129 
+        material: 'Titane Grade 2', resistance: 'A+ (>1660°C / 3020°F)', shamir: false, price: 129 
     },
     { 
         id: 'coinkite_seedplate', name: 'Coinkite SEEDPLATE', 
         features: ['steel_316', 'plate', 'punch', 'diy'],
-        material: 'Acier Inox 316L', resistance: 'A (~1450°C)', shamir: false, price: 39 
+        material: 'Acier Inox 316L', resistance: 'A (~1450°C / 2642°F)', shamir: false, price: 39 
     },
     { 
         id: 'hodlinox', name: 'Hodlinox (Sound Bitcoin)', 
         features: ['steel_304', 'plate', 'punch', 'diy'],
-        material: 'Acier Inox 304', resistance: 'B (~1400°C)', shamir: false, price: 29 
+        material: 'Acier Inox 304', resistance: 'B (~1400°C / 2552°F)', shamir: false, price: 29 
     },
     { 
         id: 'blockplate', name: 'Blockplate', 
         features: ['steel_304', 'plate', 'punch', 'diy'],
-        material: 'Acier Inox 304', resistance: 'A (~1400°C)', shamir: false, price: 45 
+        material: 'Acier Inox 304', resistance: 'A (~1400°C / 2552°F)', shamir: false, price: 45 
     },
     { 
         id: 'coinplate', name: 'Coinplate Alpha', 
         features: ['steel_304', 'plate', 'punch', 'diy'],
-        material: 'Acier Inox 304', resistance: 'A (>1400°C)', shamir: false, price: 79 
+        material: 'Acier Inox 304', resistance: 'A (>1400°C / 2552°F)', shamir: false, price: 79 
     },
     { 
         id: 'trezor_keep_triple', name: 'Trezor Keep Metal (Triple)', 
         features: ['steel_304', 'capsule', 'punch', 'shamir', 'diy'],
-        material: 'Acier 304', resistance: 'A', shamir: true, price: 99 
+        material: 'Acier 304', resistance: 'A (~1400°C / 2552°F)', shamir: true, price: 99 
     },
     { 
         id: 'cryptotag_thor', name: 'Cryptotag Thor (Kit Shamir)', 
         features: ['titanium', 'plate', 'punch', 'shamir', 'diy'],
-        material: 'Titane Grade 2', resistance: 'A+ (>1660°C)', shamir: true, price: 199 
+        material: 'Titane Grade 2', resistance: 'A+ (>1660°C / 3020°F)', shamir: true, price: 199 
     },
     { 
         id: 'ngrave_graphene', name: 'NGRAVE Graphene', 
         features: ['steel_304', 'plate', 'punch', 'shamir'],
-        material: 'Acier Inox (Embossage)', resistance: 'A+ (>1375°C)', shamir: true, price: 149 
+        material: 'Acier Inox (Embossage)', resistance: 'A+ (>1375°C / 2507°F)', shamir: true, price: 149 
     },
     { 
         id: "billfodl", name: "Billfodl", 
         features: ['steel_316', 'cassette', 'tiles'],
-        material: "Acier Inox 316 Marine", resistance: "A (>1300°C réel)", shamir: false, price: 99 
+        material: "Acier Inox 316 Marine", resistance: "A (>1300°C / 2372°F)", shamir: false, price: 99 
     },
     { 
         id: "cryptosteel_capsule", name: "Cryptosteel Capsule Solo", 
         features: ['steel_304', 'capsule', 'tiles'],
-        material: "Acier Inox 304", resistance: "1400°C", shamir: false, price: 89 
+        material: "Acier Inox 304", resistance: "A (1400°C / 2552°F)", shamir: false, price: 89 
     },
     { 
         id: "safepal_cypher", name: "SafePal Cypher", 
         features: ['steel_304', 'cassette', 'tiles'],
-        material: "Acier Inox 304", resistance: "~1400°C", shamir: false, price: 49 
+        material: "Acier Inox 304", resistance: "~1400°C / 2552°F", shamir: false, price: 49 
     },
     { 
         id: "keystone_tablet", name: "Keystone Tablet Plus", 
         features: ['steel_304', 'cassette', 'tiles'],
-        material: "Acier Inox 304", resistance: "1455°C", shamir: false, price: 49 
+        material: "Acier Inox 304", resistance: "1455°C / 2651°F", shamir: false, price: 49 
     },
     { 
         id: 'safeseed_moly', name: 'Safe Seed Molybdenum', 
         features: ['molybdenum', 'plate', 'punch', 'diy'],
-        material: 'Molybdène', resistance: 'S (>2620°C)', shamir: false, price: 89 
+        material: 'Molybdène', resistance: 'S (>2620°C / 4750°F)', shamir: false, price: 89 
     },
     { 
         id: 'secux_xseed_pro', name: 'SecuX X-SEED PRO', 
         features: ['steel_304', 'cassette', 'tiles'], 
-        material: 'Acier Inox 304 & Alu', resistance: 'A (1454°C)', shamir: false, price: 89 
+        material: 'Acier Inox 304 & Alu', resistance: 'A (1454°C / 2649°F)', shamir: false, price: 89 
     },
     { 
         id: 'cryptosteel_seed12', name: 'Cryptosteel Seed12', 
         features: ['steel_304', 'capsule', 'tiles', 'shamir'],
-        material: 'Acier Inox 304', resistance: 'A (~1450°C)', shamir: true, price: 45 
+        material: 'Acier Inox 304', resistance: 'A (~1450°C / 2642°F)', shamir: true, price: 45 
     },
     {
         id: "stampseed_kit", name: "StampSeed Titanium Stamping Kit", 
         features: ['titanium', 'plate', 'punch', 'shamir', 'diy'],
-        material: "Titane Aerospace Grade", resistance: "A+ (>1660°C)", shamir: true, price: 139 
+        material: "Titane Aerospace Grade", resistance: "A+ (>1660°C / 3020°F)", shamir: true, price: 139 
     },
     {
         id: 'imkey_heirbox_s1', name: 'imKey HeirBOX S1',
         features: ['steel_304', 'capsule', 'tiles'],
-        material: 'Acier Inox 304', resistance: 'A (1398°C)', shamir: false, price: 45
+        material: 'Acier Inox 304', resistance: 'A (1398°C / 2548°F)', shamir: false, price: 45
     },
     {
         id: 'ellipal_seed_phrase_steel', name: 'ELLIPALIP Seed Phrase Steel',
-        features: ['steel_316', 'plate', 'punch', 'diy'], // ou 'cassette', 'tiles' si modèle clamshell
-        material: 'Acier Inox 316', resistance: 'A+ (1454°C)', shamir: false, price: 49
+        features: ['steel_316', 'plate', 'punch', 'diy'],
+        material: 'Acier Inox 316', resistance: 'A+ (1454°C / 2649°F)', shamir: false, price: 49
     },
     {
         id: 'bitbox_steelwallet', name: 'BitBox Steelwallet',
         features: ['steel_304', 'plate', 'punch', 'diy'],
-        material: 'Acier Inox 304', resistance: 'A (~1400°C)', shamir: false, price: 65
+        material: 'Acier Inox 304', resistance: 'A (~1400°C / 2552°F)', shamir: false, price: 65
     },
     {
         id: 'tinyseed', name: 'Tinyseed',
         features: ['titanium', 'plate', 'punch', 'diy', 'shamir'],
-        material: 'Titane Pur', resistance: 'A+ (>1660°C)', shamir: true, price: 49
+        material: 'Titane Pur', resistance: 'A+ (>1660°C / 3020°F)', shamir: true, price: 49
     },
     {
         id: 'coldti', name: 'ColdTi Titanium Plates',
         features: ['titanium', 'plate', 'punch', 'diy'],
-        material: 'Titane', resistance: 'A+ (>1660°C)', shamir: false, price: 69
+        material: 'Titane', resistance: 'A+ (>1660°C / 3020°F)', shamir: false, price: 69
     }
-]
+    ]
 };

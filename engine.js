@@ -10,16 +10,113 @@
 
 if (typeof KB === 'undefined') {
     console.error("ERREUR CRITIQUE : knowledge_base.js n'est pas chargé.");
-    alert("Erreur de chargement des données. Vérifiez la console.");
+    alert("Erreur de chargement des données.");
 }
 
 const DB_WALLETS = KB.WALLETS;
 const DB_METAL = KB.METALS;
-const T = KB.LANG.fr; 
+
+// --- CONFIG LANGUE (ANGLAIS PAR DÉFAUT) ---
+let currentLang = 'en'; 
+let T = KB.LANG[currentLang];
 
 let answers = { q5: [] };
 let currentStep = 0;
 const QUESTION_FLOW = ['q1', 'q1_bis', 'q2', 'q2_bis', 'q3', 'q3_bis', 'q4', 'q5', 'q6', 'q7', 'q8'];
+
+// Variables globales pour stocker le dernier résultat (nécessaire pour rafraîchir la langue)
+let lastArchTitle, lastArchDesc, lastWallets, lastMetals, lastWarnings, lastIsMultisig;
+
+function setLanguage(lang) {
+    if (!KB.LANG[lang]) return;
+    currentLang = lang;
+    T = KB.LANG[lang];
+    
+    // 1. Mise à jour visuelle des boutons (Orange pour actif)
+    const btnFr = document.getElementById('btn-lang-fr');
+    const btnEn = document.getElementById('btn-lang-en');
+    
+    const inactiveClass = "text-slate-500";
+    const activeClass = "text-[#f7931a]"; // Orange
+
+    if(btnFr && btnEn) {
+        if (lang === 'fr') {
+            btnFr.classList.remove(inactiveClass); btnFr.classList.add(activeClass);
+            btnEn.classList.remove(activeClass); btnEn.classList.add(inactiveClass);
+        } else {
+            btnEn.classList.remove(inactiveClass); btnEn.classList.add(activeClass);
+            btnFr.classList.remove(activeClass); btnFr.classList.add(inactiveClass);
+        }
+    }
+
+    // 2. Mise à jour des textes statiques (Titres, Disclaimer...)
+    updateInterfaceText();
+    updateNetworkStatus();
+    
+    // 3. Rafraîchissement dynamique si un écran est affiché
+    const quizPanel = document.getElementById('quiz-panel');
+    const resultPanel = document.getElementById('result-panel');
+
+    if (!quizPanel.classList.contains('hidden')) {
+        renderQuestion();
+    }
+    else if (!resultPanel.classList.contains('hidden')) {
+        // Cas spécial : Page Garde Collaborative ou Résultats classiques
+        if (answers.q1_bis === 'assisted' && answers.q1 !== '1') {
+             showLazyRichExit();
+        } else {
+             // On réutilise les dernières données calculées
+             renderResultsUI(lastArchTitle, lastArchDesc, lastWallets, lastMetals, lastWarnings, lastIsMultisig);
+        }
+    }
+}
+
+function updateInterfaceText() {
+    document.title = T.app_title_text;
+    const navBrand = document.getElementById('nav-brand');
+    if(navBrand) navBrand.innerHTML = T.app_brand_html;
+    
+    setText('txt-hero-1', T.hero_title_1);
+    setText('txt-hero-2', T.hero_title_2);
+    setHTML('txt-hero-desc', T.hero_desc);
+    setText('txt-btn-start', T.hero_btn);
+    
+    setText('txt-block-1-title', T.block_anon_title);
+    setText('txt-block-1-desc', T.block_anon_desc);
+    setText('txt-block-2-title', T.block_agnostic_title);
+    setText('txt-block-2-desc', T.block_agnostic_desc);
+    setText('txt-block-3-title', T.block_full_title);
+    setText('txt-block-3-desc', T.block_full_desc);
+    
+    setText('footer-github-text', T.footer_github);
+
+    setText('legal-title', T.legal_title);
+    setHTML('legal-p1', T.legal_p1);
+    setHTML('legal-p2', T.legal_p2);
+    setHTML('legal-p3', T.legal_p3);
+    setHTML('legal-p4', T.legal_p4);
+    
+    setText('lbl-check-offline', T.legal_checkbox_offline);
+    setText('lbl-check-terms', T.legal_checkbox_terms);
+    setText('legal-btn-txt', T.legal_btn_start);
+    setText('btn-cancel', T.btn_cancel);
+
+    // Titre de la page résultat (si affiché)
+    const resTitle = document.getElementById('res-main-title');
+    if(resTitle) resTitle.innerText = "MySecureBTC Protocol"; 
+
+    // LOADER
+    setText('load-title', T.load_title);
+    setText('load-text', T.load_text);
+
+    // RESULTATS (Statique)
+    setText('res-tag', T.res_tag);
+    setText('res-subtitle', T.res_subtitle);
+    setText('btn-restart-txt', T.btn_restart); // Bouton fin
+
+    // VERSION MOTEUR (Footer Quiz)
+    setText('lbl-engine-version', T.engine_version);
+}
 
 // ============================================================
 // 2. GESTION DU DISCLAIMER & DEMARRAGE
@@ -38,7 +135,9 @@ function acceptLegalAndStart() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Injection des textes (Identique V2.9)
+    setLanguage(currentLang);
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
     document.title = T.app_title_text;
     const navBrand = document.getElementById('nav-brand');
     if(navBrand) navBrand.innerHTML = T.app_brand_html;
@@ -195,7 +294,7 @@ function renderQuestion() {
         // 3. Ajouter le bouton "Valider" (Indispensable pour le multi-choix)
         html += `
             <button onclick="nextStep()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 group">
-                <span>Valider la sélection</span> 
+                <span>${T.btn_validate}</span> 
                 <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </button>
         `;
@@ -223,8 +322,13 @@ function renderQuestion() {
     
     // Gestion du bouton précédent
     const btnPrev = document.getElementById('btn-prev');
-    if (currentStep > 0) btnPrev.classList.remove('hidden');
-    else btnPrev.classList.add('hidden');
+    if (currentStep > 0) {
+        btnPrev.classList.remove('hidden');
+        // On met à jour le HTML pour garder l'icône
+        btnPrev.innerHTML = `<i class="fa-solid fa-arrow-left mr-2"></i> ${T.btn_prev}`;
+    } else {
+        btnPrev.classList.add('hidden');
+    }
 }
 
 function handleMultiAnswer(checkbox, qId) {
@@ -592,82 +696,79 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
 
     // --- HTML GENERATION ---
     let matrixHtml = '';
-    if (wallets.length === 0) {
-        // Fallback ultime (Ne devrait plus arriver avec le soft scoring)
-        matrixHtml = '<div class="text-red-400 p-4 border border-red-500 rounded bg-slate-800">Aucun résultat parfait. Regardez : Trezor Safe 3 ou Ledger Flex.</div>';
-    } else {
-        let thead = `<th class="th-model">${T.matrix_model}</th>` + cols.map(c => `<th><div class="flex flex-col items-center gap-1"><i class="fa-solid ${c.icon} text-slate-500 text-lg"></i><span>${c.lbl}</span></div></th>`).join('');
-        
-        let tbody = wallets.map(w => {
-            let cells = cols.map(c => {
-                let val = '-';
-                let has = false;
-                
-                if (c.id === 'btc_only') {
-                    if(w.btc_only) { has = true; }
-                    else if(w.features.includes('btc_only_opt')) { val = 'Opt'; has=true; }
-                } 
-                else if (c.id === 'tactile' && w.features.includes('keyboard')) {
-                    val = '<i class="fa-solid fa-keyboard text-green-500"></i>'; has = true; 
-                }
-                else {
-                    if (w.features.includes(c.id)) has = true;
-                }
+        if (wallets.length === 0) {
+            matrixHtml = '<div class="text-red-400 p-4 border border-red-500 rounded bg-slate-800">Aucun résultat parfait.</div>';
+        } else {
+            let thead = `<th class="th-model">${T.matrix_model}</th>` + cols.map(c => `<th><div class="flex flex-col items-center gap-1"><i class="fa-solid ${c.icon} text-slate-500 text-lg"></i><span>${c.lbl}</span></div></th>`).join('');
+            
+            let tbody = wallets.map(w => {
+                let cells = cols.map(c => {
+                    let val = '-';
+                    let has = false;
+                    
+                    if (c.id === 'btc_only') {
+                        if(w.btc_only) { has = true; }
+                        else if(w.features.includes('btc_only_opt')) { val = 'Opt'; has=true; }
+                    } 
+                    else if (c.id === 'tactile' && w.features.includes('keyboard')) {
+                        val = '<i class="fa-solid fa-keyboard text-green-500"></i>'; has = true; 
+                    }
+                    else {
+                        if (w.features.includes(c.id)) has = true;
+                    }
 
-                if (has && val === '-') val = '<i class="fa-solid fa-check text-green-500"></i>';
-                if (!has) val = '<span class="text-slate-700">-</span>';
-                if (val === 'Opt') val = '<span class="text-yellow-500 text-xs">Opt</span>';
+                    if (has && val === '-') val = '<i class="fa-solid fa-check text-green-500"></i>';
+                    if (!has) val = '<span class="text-slate-700">-</span>';
+                    if (val === 'Opt') val = '<span class="text-yellow-500 text-xs">Opt</span>';
 
-                return `<td>${val}</td>`;
+                    return `<td>${val}</td>`;
+                }).join('');
+
+                // TRADUCTION DESCRIPTION WALLET
+                const translatedDesc = T['desc_' + w.id] || w.desc;
+
+                return `<tr><td class="td-model"><div class="font-bold text-white">${w.name}</div><div class="text-[10px] text-slate-400 mt-1">${translatedDesc}</div></td>${cells}</tr>`;
             }).join('');
 
-            return `<tr><td class="td-model"><div class="font-bold text-white">${w.name}</div><div class="text-[10px] text-slate-400 mt-1">${w.desc}</div></td>${cells}</tr>`;
-        }).join('');
-
-        matrixHtml = `<div class="matrix-container"><table class="matrix-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
-    }
+            matrixHtml = `<div class="matrix-container"><table class="matrix-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
+        }
 
     let metalsHtml = metals.map(m => {
-        const isShamir = m.features && m.features.includes('shamir');
-        const isPunch = m.features && m.features.includes('punch');
-        const isTitanium = m.features && (m.features.includes('titanium') || m.features.includes('molybdenum'));
-        
-        // Tooltips et Textes localisés via T
-        const shamirBadge = isShamir 
-            ? `<div class="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/30" title="${T.metal_tip_shamir}">
-                 <i class="fa-solid fa-puzzle-piece text-xs"></i>
-               </div>` 
-            : '';
-
-        const typeIcon = isPunch 
-            ? `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_punch}">
-                 <i class="fa-solid fa-hammer text-xs"></i>
-               </div>`
-            : `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_tiles}">
-                 <i class="fa-solid fa-table-cells text-xs"></i>
-               </div>`;
-
-        const fireColor = isTitanium ? 'text-red-400' : 'text-orange-400';
-        
-        return `
-        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-3 hover:border-slate-600 transition-colors group">
-            <div class="flex-grow">
-                <div class="font-bold text-white text-sm flex items-center gap-2">
-                    ${m.name}
-                    ${isTitanium ? `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">${T.metal_badge_ultra}</span>` : ''}
-                </div>
-                <div class="text-xs ${fireColor} font-mono mt-1 flex items-center gap-2" title="${T.metal_tip_fire}">
-                    <i class="fa-solid fa-fire"></i> ${m.resistance}
-                </div>
-                <div class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[200px]">${m.material}</div>
-            </div>
+            const isShamir = m.features && m.features.includes('shamir');
+            const isPunch = m.features && m.features.includes('punch');
+            const isTitanium = m.features && (m.features.includes('titanium') || m.features.includes('molybdenum'));
             
-            <div class="flex items-center gap-2 pl-3 border-l border-slate-700 ml-2">
-                ${shamirBadge}
-                ${typeIcon}
-            </div>
-        </div>`;
-    }).join('');
+            const shamirBadge = isShamir 
+                ? `<div class="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/30" title="${T.metal_tip_shamir}"><i class="fa-solid fa-puzzle-piece text-xs"></i></div>` : '';
+
+            const typeIcon = isPunch 
+                ? `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_punch}"><i class="fa-solid fa-hammer text-xs"></i></div>`
+                : `<div class="w-8 h-8 rounded bg-slate-700 flex items-center justify-center text-slate-400 border border-slate-600" title="${T.metal_tip_tiles}"><i class="fa-solid fa-table-cells text-xs"></i></div>`;
+
+            const fireColor = isTitanium ? 'text-red-400' : 'text-orange-400';
+            
+            // TRADUCTION MATERIAU METAL (Pas la résistance)
+            const translatedMat = T['mat_' + m.id] || m.material;
+
+            return `
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-3 hover:border-slate-600 transition-colors group">
+                <div class="flex-grow">
+                    <div class="font-bold text-white text-sm flex items-center gap-2">
+                        ${m.name}
+                        ${isTitanium ? `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">${T.metal_badge_ultra}</span>` : ''}
+                    </div>
+                    <div class="text-xs ${fireColor} font-mono mt-1 flex items-center gap-2" title="${T.metal_tip_fire}">
+                        <i class="fa-solid fa-fire"></i> ${m.resistance}
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-0.5 truncate max-w-[200px]">${translatedMat}</div>
+                </div>
+                
+                <div class="flex items-center gap-2 pl-3 border-l border-slate-700 ml-2">
+                    ${shamirBadge}
+                    ${typeIcon}
+                </div>
+            </div>`;
+        }).join('');
 
     let warnHtml = warnings.map(w => `<div class="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded text-sm text-yellow-200 flex items-start gap-3"><i class="fa-solid fa-triangle-exclamation mt-1"></i><div>${w}</div></div>`).join('');
 
@@ -707,7 +808,7 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
                     <div class="glass-panel p-4 rounded-xl bg-slate-800/90">
                         <div class="mb-4">
                             <div class="text-xs text-slate-400">
-                                Modèles compatibles:
+                                ${T.res_compat}
                             </div>
                             
                             ${answers.q1 === '3' && !(answers.q5 || []).includes('opt_fire_ext') ? `
@@ -729,6 +830,17 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
             </div>
 
             ${getProfileSummaryHtml()}
+
+            <div class="mt-16 text-center border-t border-slate-800 pt-8 flex flex-col items-center gap-4">
+                 
+                 <button onclick="location.reload()" class="text-slate-400 hover:text-white text-sm transition-colors border border-slate-700 px-6 py-2 rounded hover:bg-slate-800">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> ${T.btn_restart}
+                </button>
+                <a href="https://github.com/dwidoo/mybtcsecured" target="_blank" class="text-xs text-slate-600 hover:text-[#f7931a] transition-colors flex items-center gap-2 mt-4">
+                    <i class="fa-brands fa-github"></i> ${T.footer_github}
+                </a>
+                
+                </div>
         `;
 }
 
@@ -845,7 +957,55 @@ function getProfileSummaryHtml() {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
                     ${itemsHtml}
                 </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-700/50 text-[10px] text-slate-600 font-mono text-right">
+                    ${T.engine_version}
+                </div>
             </div>
         </div>
     `;
+}
+
+// GESTION DU STATUT RÉSEAU (Couleurs + Traductions)
+function updateNetworkStatus() {
+    const isOnline = navigator.onLine;
+    
+    // 1. Récupération des textes traduits
+    const txtNav = isOnline ? T.nav_online : T.nav_offline;
+    const txtModal = isOnline ? T.status_online : T.status_offline;
+
+    // 2. Éléments du DOM
+    const dot = document.getElementById('net-dot');
+    const txt = document.getElementById('net-text');
+    const box = document.getElementById('net-status');
+    const modalStatus = document.getElementById('modal-net-status');
+
+    // 3. Mise à jour Navbar
+    if (txt) txt.innerText = txtNav;
+
+    if (isOnline) {
+        // --- MODE ONLINE ---
+        // Navbar : Vert / Neutre
+        if(dot) { dot.classList.remove('bg-orange-500'); dot.classList.add('bg-green-500'); }
+        if(txt) { txt.classList.remove('text-orange-400'); txt.classList.add('text-slate-300'); }
+        if(box) { box.classList.remove('border-orange-500/50'); box.classList.add('border-slate-700'); }
+
+        // Modale : Gris (Neutre)
+        if(modalStatus) {
+            modalStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> <span>${txtModal}</span>`;
+            modalStatus.className = "inline-flex items-center gap-2 text-[10px] font-mono uppercase px-2 py-0.5 rounded border transition-colors border-slate-700 text-slate-500 bg-slate-900";
+        }
+    } else {
+        // --- MODE OFFLINE ---
+        // Navbar : Orange (Alerte visuelle positive)
+        if(dot) { dot.classList.remove('bg-green-500'); dot.classList.add('bg-orange-500'); }
+        if(txt) { txt.classList.remove('text-slate-300'); txt.classList.add('text-orange-400'); }
+        if(box) { box.classList.remove('border-slate-700'); box.classList.add('border-orange-500/50'); }
+
+        // Modale : Vert (Positif, car c'est sécurisé)
+        if(modalStatus) {
+            modalStatus.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> <span>${txtModal}</span>`;
+            modalStatus.className = "inline-flex items-center gap-2 text-[10px] font-mono uppercase px-2 py-0.5 rounded border transition-colors border-green-500/30 text-green-400 bg-green-900/20";
+        }
+    }
 }
