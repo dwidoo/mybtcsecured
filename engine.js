@@ -61,12 +61,13 @@ function setLanguage(lang) {
         renderQuestion();
     }
     else if (!resultPanel.classList.contains('hidden')) {
-        // Cas spécial : Page Garde Collaborative ou Résultats classiques
+        // Si on est sur la page de résultats
         if (answers.q1_bis === 'assisted' && answers.q1 !== '1') {
              showLazyRichExit();
         } else {
-             // On réutilise les dernières données calculées
-             renderResultsUI(lastArchTitle, lastArchDesc, lastWallets, lastMetals, lastWarnings, lastIsMultisig);
+             // CORRECTION : On relance le calcul complet (calculateResults)
+             // Cela force le moteur à reprendre les textes dans la nouvelle langue (T)
+             calculateResults(); 
         }
     }
 }
