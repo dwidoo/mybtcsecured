@@ -38,7 +38,13 @@ const KB = {
                 opt_ok: "Non, vision et motricité standards", 
                 opt_handicap: "Oui (J'ai besoin d'un grand écran ou d'une interface très aérée)" 
             },
-            q3: { text: "Quel appareil utiliserez-vous pour gérer vos transactions ?", info: "Détermine la connectique du matériel (USB-C, Lightning, Bluetooth...).", opt_ios: "iPhone (iOS)", opt_android: "Android", opt_desktop: "Ordinateur (Mac / Windows / Linux)" },
+            q3: { 
+                text: "Quels appareils utiliserez-vous pour gérer vos transactions ? ", 
+                info: "Sélectionnez tous les appareils susceptibles de gérer vos transactions. Le matériel proposé sera compatible avec l'ensemble.", 
+                opt_ios: "iPhone (iOS)", 
+                opt_android: "Android", 
+                opt_desktop: "Ordinateur (Mac / Windows / Linux)" 
+            },
             q3_bis: { text: "Ce matériel devra-t-il passer des frontières ?", info: "Voyager avec un hardware wallet physique peut attirer l'attention aux contrôles de sécurité.", opt_static: "Non, stockage sédentaire (Domicile/Coffre)", opt_nomad: "Oui, je prévois de voyager avec mes clés (Risque douanier)" },
             q4: { 
                 text: "Contre quelle menace physique souhaitez-vous une protection ?", 

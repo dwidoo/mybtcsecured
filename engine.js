@@ -144,15 +144,17 @@ function shouldSkip(qId) {
 }
 
 function renderQuestion() {
-    // ... (Code identique à V2.9 pour l'affichage) ...
     const qId = QUESTION_FLOW[currentStep];
     if (!qId) { finishQuiz(); return; }
 
     const qData = T[qId];
     const container = document.getElementById('question-container');
+    
+    // Calcul de la barre de progression
     const progress = ((currentStep) / QUESTION_FLOW.length) * 100;
     document.getElementById('progress-bar').style.width = `${progress}%`;
 
+    // Début du HTML (Titre + Info)
     let html = `
         <div class="fade-in">
             <h2 class="text-xl md:text-2xl font-bold text-white mb-3">${qData.text}</h2>
@@ -160,24 +162,47 @@ function renderQuestion() {
             <div class="space-y-3">
     `;
 
-    if (qId === 'q5') {
-        const options = ['opt_fire_std', 'opt_fire_ext', 'opt_water', 'opt_social', 'opt_none'];
+    // --- CONDITION MULTI-CHOIX (Q3 et Q5) ---
+    if (qId === 'q5' || qId === 'q3') {
+        
+        // 1. Définir les options dynamiquement selon la question
+        let options = [];
+        if (qId === 'q5') options = ['opt_fire_std', 'opt_fire_ext', 'opt_water', 'opt_social', 'opt_none'];
+        if (qId === 'q3') options = ['opt_ios', 'opt_android', 'opt_desktop'];
+
+        // 2. Générer les checkboxes (Style identique Q5)
         options.forEach(opt => {
-            const isChecked = answers.q5 && answers.q5.includes(opt) ? 'checked' : '';
+            // On s'assure que answers[qId] est bien un tableau
+            const currentAnswers = answers[qId] || [];
+            const isChecked = currentAnswers.includes(opt) ? 'checked' : '';
+            
+            // Note: l'input a la classe "peer" pour que la div suivante puisse réagir à l'état "checked"
             html += `
-                <label class="checkbox-wrapper cursor-pointer block relative">
-                    <input type="checkbox" value="${opt}" ${isChecked} onchange="handleMultiAnswer(this)" class="sr-only">
-                    <div class="p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-orange-500 transition-all text-slate-200 flex items-center justify-between">
-                        <span class="font-medium">${qData[opt]}</span>
-                        <div class="check-icon w-6 h-6 rounded-full border border-slate-500 flex items-center justify-center text-orange-500 opacity-20 transform scale-75 transition-all">
-                            <i class="fa-solid fa-check"></i>
+                <label class="checkbox-wrapper cursor-pointer block relative mb-3">
+                    <input type="checkbox" value="${opt}" ${isChecked} onchange="handleMultiAnswer(this, '${qId}')" class="sr-only peer">
+                    
+                    <div class="p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-700 peer-checked:border-orange-500 peer-checked:bg-[#2a1b12] transition-all text-slate-200 flex items-center justify-between group">
+                        <span class="font-medium group-hover:text-white">${qData[opt]}</span>
+                        
+                        <div class="check-icon w-6 h-6 rounded-full border border-slate-500 peer-checked:border-orange-500 peer-checked:bg-orange-500/10 text-white flex items-center justify-center opacity-20 peer-checked:opacity-100 transition-all scale-90 peer-checked:scale-100">
+                            <i class="fa-solid fa-check text-xs text-orange-500"></i>
                         </div>
                     </div>
                 </label>
             `;
         });
-        html += `<button onclick="nextStep()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all">Valider les risques</button>`;
-    } else {
+
+        // 3. Ajouter le bouton "Valider" (Indispensable pour le multi-choix)
+        html += `
+            <button onclick="nextStep()" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 group">
+                <span>Valider la sélection</span> 
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        `;
+
+    } 
+    // --- CONDITION STANDARD (Choix Unique / Boutons) ---
+    else {
         Object.keys(qData).forEach(key => {
             if (key.startsWith('opt_')) {
                 const val = key.replace('opt_', '');
@@ -192,25 +217,38 @@ function renderQuestion() {
             }
         });
     }
+
     html += `</div></div>`;
     container.innerHTML = html;
     
+    // Gestion du bouton précédent
     const btnPrev = document.getElementById('btn-prev');
     if (currentStep > 0) btnPrev.classList.remove('hidden');
     else btnPrev.classList.add('hidden');
 }
 
-function handleMultiAnswer(checkbox) {
-    if (!answers.q5) answers.q5 = [];
-    if (checkbox.checked) {
-        if (checkbox.value === 'opt_none') answers.q5 = ['opt_none'];
-        else {
-            answers.q5 = answers.q5.filter(v => v !== 'opt_none');
-            answers.q5.push(checkbox.value);
+function handleMultiAnswer(checkbox, qId) {
+    // Si pas encore de réponse, on initie un tableau vide
+    if (!answers[qId]) answers[qId] = [];
+    
+    // Logique spécifique Q5 (Exclusivité "Aucun")
+    if (qId === 'q5') {
+        if (checkbox.checked) {
+            if (checkbox.value === 'opt_none') answers.q5 = ['opt_none'];
+            else {
+                answers.q5 = answers.q5.filter(v => v !== 'opt_none');
+                answers.q5.push(checkbox.value);
+            }
+        } else {
+            answers.q5 = answers.q5.filter(v => v !== checkbox.value);
         }
-    } else {
-        answers.q5 = answers.q5.filter(v => v !== checkbox.value);
     }
+    // Logique standard (Q3) : Ajout/Retrait simple
+    else {
+        if (checkbox.checked) answers[qId].push(checkbox.value);
+        else answers[qId] = answers[qId].filter(v => v !== checkbox.value);
+    }
+    
     renderQuestion(); 
 }
 
@@ -298,7 +336,7 @@ function calculateResults() {
     const trust = answers.q8;
     const isNomad = answers.q3_bis === 'nomad';
     const noKyc = answers.q7 === 'no_kyc';
-    const device = answers.q3;
+
 
     // --- A. DÉFINITION DE L'ARCHITECTURE ---
     let archTitle = T.arch_single;
@@ -379,6 +417,17 @@ function calculateResults() {
 
     if (validMetals.length === 0) validMetals = [DB_METAL[0]];
 
+    // GESTION Q3 MULTI-DEVICE
+    // On s'assure que c'est un tableau (rétro-compatibilité ou auto-fill)
+    let devices = [];
+    if (Array.isArray(answers.q3)) devices = answers.q3;
+    else if (answers.q3) devices = [answers.q3]; // Si ancienne version string
+    else devices = ['opt_desktop']; // Défaut si vide (Tier 1 auto-fill)
+
+    // On détecte les contraintes
+    const hasIos = devices.includes('opt_ios');
+    const hasAndroid = devices.includes('opt_android');
+
 
     // --- C. FILTRAGE & SCORING WALLETS (MODIFICATION 1) ---
     
@@ -388,9 +437,11 @@ function calculateResults() {
         if (handicap && (w.screen === 'small' || w.screen === 'mid')) return false;
         
         // iOS Beginner : On interdit ce qui est complexe (Airgap pur sans QR facile) sauf si Bluetooth
-        if (device === 'ios' && skill === 'beginner' && !w.features.includes('ble')) {
-             // Exception pour Keystone/Jade/ColdcardQ1 qui ont des UX QR codes gérables
-             if(!['keystone3','jade','coldcard_q1'].includes(w.id)) return false;
+        // Si l'utilisateur a un iPhone (même s'il a aussi un PC), on applique la restriction iOS.
+        // Car s'il veut signer en mobilité, le wallet doit être compatible.
+        if (hasIos && skill === 'beginner' && !w.features.includes('ble')) {
+             // Exception pour les wallets AirGap QR Code faciles
+             if(!['keystone3','jade_plus','jade','coldcard_q1'].includes(w.id)) return false;
         }
         
         // No-KYC : On veut de l'Open Source (Bitkey accepté car hardware 'dummy')
@@ -429,7 +480,8 @@ function calculateResults() {
         if (isNomad && w.features.includes('stealth')) score += 15;
 
         // Malus légers (préférence utilisateur)
-        if (device === 'ios' && !w.features.includes('ble') && !w.features.includes('camera')) score -= 10; // Pas pratique
+        // Si iPhone choisi, on pénalise un peu ceux qui n'ont ni Bluetooth ni Caméra (câble adaptateur requis)
+        if (hasIos && !w.features.includes('ble') && !w.features.includes('camera')) score -= 10;
         if (noKyc && !w.features.includes('tor') && w.id !== 'seedsigner') score -= 5;
 
         return { ...w, score };
@@ -512,7 +564,7 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
         { id: 'airgap', lbl: T.matrix_airgap, icon: 'fa-wifi', weight: 10 },
         { id: 'btc_only', lbl: T.matrix_btc, icon: 'fa-bitcoin', weight: 10 },
         { id: 'ble', lbl: T.matrix_ble, icon: 'fa-brands fa-bluetooth', weight: 5 },
-        { id: 'nfc', lbl: T.matrix_nfc, icon: 'fa-mobile-signal', weight: 5 },
+        { id: 'nfc', lbl: T.matrix_nfc, icon: 'fa-solid fa-wifi', weight: 5 },
         { id: 'tor', lbl: T.matrix_tor, icon: 'fa-user-secret', weight: 5 },
         { id: 'shamir', lbl: T.matrix_shamir, icon: 'fa-puzzle-piece', weight: 5 }
     ];
@@ -622,7 +674,7 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
     const procedures = getProcedures(arch, isMultisig);
     let procsHtml = procedures.map((p, i) => `
         <div class="bg-slate-800 border ${p.alert ? 'border-red-500' : 'border-slate-700'} rounded-xl p-6 flex gap-5 hover:border-slate-600 transition-colors">
-            <div class="text-2xl font-bold opacity-50 ${p.alert ? 'text-red-500' : 'text-slate-600'}">${i+1}</div>
+            <div class="text-3xl font-bold ${p.alert ? 'text-red-500' : 'text-slate-400'}">${i+1}</div>
             <div>
                 <div class="font-bold text-white mb-1 ${p.alert ? 'text-red-400' : ''}">${p.t}</div>
                 <div class="text-sm text-slate-400 leading-relaxed">${p.d}</div>
@@ -752,15 +804,27 @@ function getProfileSummaryHtml() {
         let labelVal = T.sum_default;
 
         if (userVal) {
+            // CAS 1 : Q5 (Risques) - Logique spéciale "Aucun"
             if (key === 'q5' && Array.isArray(userVal)) {
                 if(userVal.length === 0 || userVal.includes('opt_none')) labelVal = T.sum_risk_none;
                 else labelVal = userVal.map(v => (conf.t[v] || v).replace(/ *\([^)]*\) */g, "")).join(', ');
             } 
+            // CAS 2 : Q3 (Appareils) - Logique tableau standard (C'est ici qu'on ajoute le else if)
+            else if (key === 'q3' && Array.isArray(userVal)) {
+                // On map chaque valeur (ex: 'opt_ios') vers son texte, on nettoie les parenthèses, et on joint par virgule
+                labelVal = userVal.map(v => (conf.t[v] || v).replace(/ *\([^)]*\) */g, "")).join(', ');
+            }
+            // CAS 3 : Questions Standards (String unique)
             else {
-                // Récupération propre du texte
+                // On essaie avec 'opt_' (pour q1='1') ou directement (pour q3_bis='static')
                 let rawLabel = conf.t['opt_' + userVal] || conf.t[userVal] || userVal;
-                // Nettoyage des parenthèses
-                if (typeof rawLabel === 'string') labelVal = rawLabel.split('(')[0].trim();
+                
+                // Sécurité : on s'assure que c'est bien une string avant de split
+                if (typeof rawLabel === 'string') {
+                    labelVal = rawLabel.split('(')[0].trim();
+                } else {
+                    labelVal = String(rawLabel);
+                }
             }
         }
 
