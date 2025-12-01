@@ -829,11 +829,13 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
                 ${matrixHtml}
             </div>
 
+            ${getDonationHtml()}
+
             ${getProfileSummaryHtml()}
 
             <div class="mt-16 text-center border-t border-slate-800 pt-8 flex flex-col items-center gap-4">
                  
-                 <button onclick="location.reload()" class="text-slate-400 hover:text-white text-sm transition-colors border border-slate-700 px-6 py-2 rounded hover:bg-slate-800">
+                <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2">
                     <i class="fa-solid fa-rotate-right mr-2"></i> ${T.btn_restart}
                 </button>
                 <a href="https://github.com/dwidoo/mybtcsecured" target="_blank" class="text-xs text-slate-600 hover:text-[#f7931a] transition-colors flex items-center gap-2 mt-4">
@@ -1008,4 +1010,79 @@ function updateNetworkStatus() {
             modalStatus.className = "inline-flex items-center gap-2 text-[10px] font-mono uppercase px-2 py-0.5 rounded border transition-colors border-green-500/30 text-green-400 bg-green-900/20";
         }
     }
+}
+
+function getDonationHtml() {
+    // VOS ADRESSES
+    const lnAddress = "votre_adresse@walletofsatoshi.com"; 
+    const btcAddress = "bc1q....votre_adresse_btc...."; 
+
+    return `
+        <div class="mt-8 mb-8 p-6 rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden group">
+            
+            <div class="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-8">
+                
+                <div class="text-center xl:text-left max-w-lg">
+                    <h3 class="text-[#f7931a] font-bold uppercase tracking-widest text-xs mb-3 flex items-center justify-center xl:justify-start gap-2">
+                        <i class="fa-solid fa-mug-hot"></i> ${T.don_title}
+                    </h3>
+                    
+                    <p class="text-slate-300 text-sm mb-3 leading-relaxed">${T.don_text}</p>
+                    
+                    <p class="text-slate-400 text-sm italic mb-4">${T.don_funny}</p>
+                    
+                    <div class="mt-4 text-sm text-slate-400 flex items-center justify-center xl:justify-start gap-1">
+                        <i class="fa-solid fa-cart-shopping"></i> ${T.don_action_aff}
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-6">
+                    
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="bg-white p-2 rounded-lg shadow-lg w-48 h-48 flex items-center justify-center">
+                            <img src="qr-lightning-MySecureBTC.png" alt="Lightning QR" class="w-full h-full object-contain">
+                        </div>
+                        <button onclick="handleCopy(this, '${lnAddress}')" class="text-xs bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 font-bold py-2 px-4 rounded transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> ${T.don_copy_ln}
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="bg-white p-2 rounded-lg shadow-lg w-48 h-48 flex items-center justify-center">
+                            <img src="qr-btc-MySecureBTC.png" alt="Bitcoin QR" class="w-full h-full object-contain">
+                        </div>
+                        <button onclick="handleCopy(this, '${btcAddress}')" class="text-xs bg-orange-500/10 hover:bg-orange-500/20 text-[#f7931a] border border-orange-500/30 font-bold py-2 px-4 rounded transition-all flex items-center gap-2">
+                            <i class="fa-brands fa-bitcoin"></i> ${T.don_copy_btc}
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    `;
+}
+
+// Fonction utilitaire pour copie moderne (sans popup)
+function handleCopy(btn, textToCopy) {
+    // 1. Copie dans le presse-papier
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        
+        // 2. Sauvegarde de l'état initial
+        const originalContent = btn.innerHTML;
+        const originalClasses = btn.className;
+
+        // 3. Changement visuel (Feedback positif)
+        // On force un style vert et blanc temporaire
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> ${T.don_copied}`;
+        btn.className = "text-xs bg-green-600 text-white font-bold py-2 px-4 rounded transition-all flex items-center gap-2 border border-green-600";
+
+        // 4. Retour à la normale après 2 secondes
+        setTimeout(() => {
+            btn.innerHTML = originalContent;
+            btn.className = originalClasses;
+        }, 2000);
+    }).catch(err => {
+        console.error('Erreur copie :', err);
+    });
 }

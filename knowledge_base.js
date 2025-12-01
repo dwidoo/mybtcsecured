@@ -307,6 +307,14 @@ const KB = {
             mat_tinyseed: "Titane Pur",
             
             mat_coldti: "Titane",
+
+            don_title: "Soutenir le projet",
+            don_text: "Si cet outil vous a fait gagner du temps, vous pouvez soutenir le code, la maintenance et les futures mises à jour.",
+            don_copied: "Copié !",
+            don_funny: "(Je sais qu'il y a 99% de chances que vous ne le fassiez pas, mais pour le 1% de légendes : merci ! ⚡️)",
+            don_copy_ln: "Copier Lightning ⚡️",
+            don_copy_btc: "Copier Bitcoin ₿",
+            don_action_aff: "Ou utilisez les liens ci-dessus pour vos achats : cela finance l'outil sans surcoût.",
         },
 
         en: {
@@ -618,6 +626,14 @@ const KB = {
             mat_tinyseed: "Pure Titanium",
             
             mat_coldti: "Titanium",
+
+            don_title: "Support the project",
+            don_text: "If this tool saved you time, you can support the code, maintenance, and future updates.",
+            don_copied: "Copied!",
+            don_funny: "(I know there's a 99% chance you won't, but for the 1% legends out there: thank you! ⚡️)",
+            don_copy_ln: "Copy Lightning ⚡️",
+            don_copy_btc: "Copy Bitcoin ₿",
+            don_action_aff: "Or use the links above for your gear: it funds the tool at no extra cost.",
 
         }
     },
