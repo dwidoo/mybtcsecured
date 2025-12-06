@@ -728,7 +728,13 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
                 // TRADUCTION DESCRIPTION WALLET
                 const translatedDesc = T['desc_' + w.id] || w.desc;
 
-                return `<tr><td class="td-model"><div class="font-bold text-white">${w.name}</div><div class="text-[10px] text-slate-400 mt-1">${translatedDesc}</div></td>${cells}</tr>`;
+                const nameHtml = w.link 
+                    ? `<a href="${w.link}" target="_blank" class="font-bold text-white hover:text-[#f7931a] transition-colors flex items-center gap-1 group/link">
+                         ${w.name} 
+                       </a>`
+                    : `<div class="font-bold text-white">${w.name}</div>`;
+
+                return `<tr><td class="td-model">${nameHtml}<div class="text-[10px] text-slate-400 mt-1">${translatedDesc}</div></td>${cells}</tr>`;
             }).join('');
 
             matrixHtml = `<div class="matrix-container"><table class="matrix-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></div>`;
@@ -751,12 +757,27 @@ function renderResultsUI(arch, archDesc, wallets, metals, warnings, isMultisig) 
             // TRADUCTION MATERIAU METAL (Pas la résistance)
             const translatedMat = T['mat_' + m.id] || m.material;
 
+            // A. Le Badge ULTRA (indépendant du lien)
+            const badgeUltraHtml = isTitanium 
+                ? `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold ml-2">${T.metal_badge_ultra}</span>` 
+                : '';
+            
+            // B. Le Nom (Soit un lien <a>, soit une <div>)
+            const nameElement = m.link
+                // CAS AVEC LIEN : Bleu par défaut, Orange (#f7931a) au survol
+                ? `<a href="${m.link}" target="_blank" class="font-bold text-white hover:text-[#f7931a] transition-colors flex items-center group/link">
+                     ${m.name} 
+                     <i class="fa-solid fa-up-right-from-square text-[10px] ml-1.5 opacity-70 group-hover/link:text-[#f7931a]"></i>
+                   </a>`
+                // CAS SANS LIEN : Blanc standard
+                : `<div class="font-bold text-white text-sm flex items-center">${m.name}</div>`;
+
             return `
             <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center mb-3 hover:border-slate-600 transition-colors group">
                 <div class="flex-grow">
-                    <div class="font-bold text-white text-sm flex items-center gap-2">
-                        ${m.name}
-                        ${isTitanium ? `<span class="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">${T.metal_badge_ultra}</span>` : ''}
+                    <div class="flex items-center flex-wrap">
+                        ${nameElement}
+                        ${badgeUltraHtml}
                     </div>
                     <div class="text-xs ${fireColor} font-mono mt-1 flex items-center gap-2" title="${T.metal_tip_fire}">
                         <i class="fa-solid fa-fire"></i> ${m.resistance}
@@ -1015,8 +1036,8 @@ function updateNetworkStatus() {
 
 function getDonationHtml() {
     // VOS ADRESSES
-    const lnAddress = "votre_adresse@walletofsatoshi.com"; 
-    const btcAddress = "bc1q....votre_adresse_btc...."; 
+    const lnAddress = "tragicfuel75@walletofsatoshi.com"; 
+    const btcAddress = "bc1qzgnj2006q6qmqxwf3h7q4r2zmny6rar3ttzc86"; 
 
     return `
         <div class="mt-8 mb-8 p-6 rounded-xl border border-slate-700/50 bg-gradient-to-br from-slate-800 to-slate-900 relative overflow-hidden group">

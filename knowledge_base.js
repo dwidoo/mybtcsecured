@@ -662,7 +662,7 @@ const KB = {
             id: 'ledger_nanox', name: 'Ledger Nano X', 
             features: ['ble', 'secure_element', 'stealth', 'recover_ready', 'usb_c'], 
             screen: 'small', skill: 'beginner', btc_only: false, price: 149,
-            desc: "Format clé USB discret. Standard Bluetooth éprouvé."
+            link: "https://shop.ledger.com/products/ledger-nano-x"
         },
         { 
             id: 'bitkey', name: 'Bitkey', 
